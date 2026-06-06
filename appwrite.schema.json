@@ -1,0 +1,31 @@
+{
+  "tables": [
+    {
+      "id": "profiles",
+      "name": "profiles",
+      "columns": [
+        { "key": "userId", "type": "varchar", "size": 64, "required": true },
+        { "key": "username", "type": "varchar", "size": 32 },
+        {
+          "key": "niche",
+          "type": "enum",
+          "elements": ["glamour", "fitness", "cosplay", "sensual"]
+        },
+        { "key": "avatarFileId", "type": "varchar", "size": 64 },
+        { "key": "bannerFileId", "type": "varchar", "size": 64 },
+        { "key": "contentFileIds", "type": "varchar", "size": 64, "array": true },
+        { "key": "bgGradient", "type": "varchar", "size": 512 },
+        {
+          "key": "botGoal",
+          "type": "enum",
+          "elements": ["maximize_tokens", "drive_subscriptions", "warm_fanbase"]
+        },
+        { "key": "onboardingComplete", "type": "boolean", "default": false }
+      ],
+      "indexes": [
+        { "key": "idx_userId", "type": "unique", "columns": ["userId"] },
+        { "key": "idx_username", "type": "unique", "columns": ["username"] }
+      ]
+    }
+  ]
+}
