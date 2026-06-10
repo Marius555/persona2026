@@ -6,16 +6,23 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 
+import { NotificationButton } from "./notification-button";
 import { SidebarNav } from "./sidebar-nav";
 import { UserMenu, type UserMenuProps } from "./user-menu";
+import { Separator } from "@heroui/react";
 
 const SIDEBAR_WIDTH = "16rem";
 
 function Brand() {
   return (
-    <div className="flex h-16 shrink-0 items-center px-6">
-      <span className="text-lg font-bold tracking-tight text-foreground">persona2</span>
-    </div>
+    <>
+      <div className="flex h-16 shrink-0 items-center px-6">
+        <span className="text-lg font-bold tracking-tight text-foreground">
+          persona2
+        </span>
+      </div>
+      <Separator className="bg-border" />
+    </>
   );
 }
 
@@ -30,8 +37,9 @@ function Brand() {
  */
 export function DashboardShell({
   children,
+  userId,
   ...user
-}: UserMenuProps & { children: React.ReactNode }) {
+}: UserMenuProps & { children: React.ReactNode; userId: string }) {
   const reduceMotion = useReducedMotion();
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -54,13 +62,15 @@ export function DashboardShell({
         initial={false}
         animate={{ width: desktopCollapsed ? 0 : SIDEBAR_WIDTH }}
         transition={
-          reduceMotion ? { duration: 0 } : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: 0.3, ease: [0.22, 1, 0.36, 1] }
         }
         className="hidden shrink-0 overflow-hidden bg-surface lg:block"
       >
         <div className="flex h-full w-64 flex-col border-r border-border">
           <Brand />
-          <SidebarNav />
+          <SidebarNav userId={userId} />
         </div>
       </motion.aside>
 
@@ -70,14 +80,14 @@ export function DashboardShell({
           <Drawer.Dialog className="w-64 max-w-[80vw] p-0">
             <Drawer.CloseTrigger />
             <Brand />
-            <SidebarNav onNavigate={() => setMobileOpen(false)} />
+            <SidebarNav userId={userId} onNavigate={() => setMobileOpen(false)} />
           </Drawer.Dialog>
         </Drawer.Content>
       </Drawer.Backdrop>
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between bg-transparent px-4">
           <Button
             isIconOnly
             variant="tertiary"
@@ -86,7 +96,10 @@ export function DashboardShell({
           >
             <HugeiconsIcon icon={Menu01Icon} className="size-5" />
           </Button>
-          <UserMenu {...user} />
+          <div className="flex items-center gap-4">
+            <NotificationButton />
+            <UserMenu userId={userId} {...user} />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>

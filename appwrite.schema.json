@@ -26,6 +26,45 @@
         { "key": "idx_userId", "type": "unique", "columns": ["userId"] },
         { "key": "idx_username", "type": "unique", "columns": ["username"] }
       ]
+    },
+    {
+      "id": "content",
+      "name": "content",
+      "columns": [
+        { "key": "userId", "type": "varchar", "size": 64, "required": true },
+        {
+          "key": "contentType",
+          "type": "enum",
+          "elements": ["file", "discount", "event", "perk"],
+          "required": true
+        },
+        {
+          "key": "tier",
+          "type": "enum",
+          "elements": ["exclusive", "gamble"],
+          "required": true
+        },
+        {
+          "key": "rarity",
+          "type": "enum",
+          "elements": ["common", "rare", "epic", "legendary"]
+        },
+        { "key": "tokenValue", "type": "integer", "min": 0, "max": 1000000 },
+        { "key": "title", "type": "varchar", "size": 120 },
+        { "key": "description", "type": "varchar", "size": 1000 },
+        { "key": "fileId", "type": "varchar", "size": 64 },
+        {
+          "key": "mediaType",
+          "type": "enum",
+          "elements": ["image", "video"]
+        },
+        { "key": "discountPercent", "type": "integer", "min": 0, "max": 100 },
+        { "key": "eventAt", "type": "varchar", "size": 40 },
+        { "key": "eventLocation", "type": "varchar", "size": 300 }
+      ],
+      "indexes": [
+        { "key": "idx_content_user", "type": "key", "columns": ["userId"] }
+      ]
     }
   ]
 }

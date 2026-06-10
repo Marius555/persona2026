@@ -11,18 +11,20 @@ import type { IconSvgElement } from "@hugeicons/react";
 export interface NavItem {
   id: string;
   label: string;
-  href: string;
+  /** Path suffix appended to the user's dashboard base (`""` is the root). */
+  segment: string;
   icon: IconSvgElement;
 }
 
 /**
- * Dashboard sidebar links. Only `/dashboard` and `/dashboard/settings` have real
- * pages today; the rest are scaffolded routes that render placeholders for now.
+ * Dashboard sidebar links. Hrefs are built per-user from these segments against
+ * `/auth/<userId>/dashboard`. Only the root, `/content` and `/settings` have
+ * real pages today; the rest are scaffolded routes for now.
  */
 export const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: DashboardSquare01Icon },
-  { id: "content", label: "Content", href: "/dashboard/content", icon: Image01Icon },
-  { id: "persona", label: "Persona", href: "/dashboard/persona", icon: AiBrain01Icon },
-  { id: "analytics", label: "Analytics", href: "/dashboard/analytics", icon: Analytics01Icon },
-  { id: "settings", label: "Settings", href: "/dashboard/settings", icon: Settings01Icon },
+  { id: "dashboard", label: "Dashboard", segment: "", icon: DashboardSquare01Icon },
+  { id: "content", label: "Content", segment: "/content", icon: Image01Icon },
+  { id: "persona", label: "Persona", segment: "/persona", icon: AiBrain01Icon },
+  { id: "analytics", label: "Analytics", segment: "/analytics", icon: Analytics01Icon },
+  { id: "settings", label: "Settings", segment: "/settings", icon: Settings01Icon },
 ];

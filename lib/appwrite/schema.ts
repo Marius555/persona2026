@@ -16,3 +16,6 @@ function tableId(id: string): string {
 
 /** Custom (stable) table id for creator profiles. */
 export const PROFILES_TABLE_ID = tableId("profiles");
+
+/** Custom (stable) table id for published content (the creator's vault). */
+export const CONTENT_TABLE_ID = tableId("content");

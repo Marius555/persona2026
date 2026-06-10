@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Separator } from '@heroui/react';
 
 export interface UserMenuProps {
+  userId: string;
   displayName: string;
   email: string;
   avatarUrl: string | null;
@@ -26,7 +27,7 @@ function initialsOf(name: string, email: string): string {
   return source.slice(0, 2).toUpperCase();
 }
 
-export function UserMenu({ displayName, email, avatarUrl }: UserMenuProps) {
+export function UserMenu({ userId, displayName, email, avatarUrl }: UserMenuProps) {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const initials = initialsOf(displayName, email);
@@ -34,13 +35,13 @@ export function UserMenu({ displayName, email, avatarUrl }: UserMenuProps) {
   async function handleAction(key: React.Key) {
     switch (key) {
       case "profile":
-        router.push("/dashboard/profile");
+        router.push(`/auth/${userId}/dashboard/profile`);
         return;
       case "settings":
-        router.push("/dashboard/settings");
+        router.push(`/auth/${userId}/dashboard/settings`);
         return;
       case "billing":
-        router.push("/dashboard/billing");
+        router.push(`/auth/${userId}/dashboard/billing`);
         return;
       case "logout": {
         if (isLoggingOut) return;

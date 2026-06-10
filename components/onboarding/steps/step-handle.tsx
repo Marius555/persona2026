@@ -3,7 +3,6 @@
 import {
   CheckmarkCircle01Icon,
   Cancel01Icon,
-  Link01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -16,7 +15,6 @@ import {
 import { useEffect, useState } from "react";
 
 import { usernameSchema } from "@/lib/validation/onboarding";
-import { PLATFORM_HOST } from "../constants";
 
 type Availability =
   | { status: "idle" }
@@ -93,8 +91,6 @@ export function StepHandle({
     };
   }, [normalized]);
 
-  const handle = normalized || "yourname";
-
   return (
     <div className="flex flex-col gap-5 text-left">
       <TextField
@@ -105,8 +101,8 @@ export function StepHandle({
         value={username}
         onChange={onUsernameChange}
       >
-        <Label>Desired username</Label>
-        <InputGroup>
+        <Label>Username</Label>
+        <InputGroup className="[--field-border:var(--border)]">
           <InputGroup.Prefix>
             <span className="text-sm text-muted">@</span>
           </InputGroup.Prefix>
@@ -129,12 +125,7 @@ export function StepHandle({
 
       {!usernameError && availability.status === "error" ? (
         <p className="-mt-3 text-xs text-danger">{availability.reason}</p>
-      ) : (
-        <p className="-mt-3 flex items-center gap-1.5 text-xs text-muted">
-          <HugeiconsIcon icon={Link01Icon} className="size-3.5" />
-          {PLATFORM_HOST}/<span className="font-medium text-foreground">{handle}</span>
-        </p>
-      )}
+      ) : null}
     </div>
   );
 }

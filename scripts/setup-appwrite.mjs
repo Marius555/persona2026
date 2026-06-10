@@ -114,6 +114,15 @@ function createColumn(tableId, col) {
         required: col.required ?? false,
         xdefault: col.default,
       });
+    case "integer":
+      return tablesDB.createIntegerColumn({
+        ...base,
+        required: col.required ?? false,
+        min: col.min,
+        max: col.max,
+        xdefault: col.default,
+        array: col.array ?? false,
+      });
     default:
       throw new Error(`Unsupported column type "${col.type}" for "${col.key}"`);
   }
