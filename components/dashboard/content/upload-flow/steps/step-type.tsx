@@ -20,10 +20,10 @@ const SHORT_LABEL: Record<ContentCategory, string> = {
   perk: "Perk",
 };
 
-/** Step 1: pick what you're adding — a row of small square tiles. */
+/** Step 1: pick what you're adding — all four options on one line. */
 export function StepType({ onSelect }: StepTypeProps) {
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-4 gap-2 text-center">
       {CATEGORY_ORDER.map((category) => {
         const meta = CATEGORY_META[category];
         return (
@@ -31,13 +31,12 @@ export function StepType({ onSelect }: StepTypeProps) {
             key={category}
             type="button"
             onClick={() => onSelect(category)}
-            className="group flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-border bg-surface-secondary/40 p-2 outline-none transition-colors hover:border-accent/60 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-focus"
+            className="flex cursor-pointer flex-col items-center gap-2 rounded-2xl border border-border bg-gradient-to-b from-surface-secondary/60 to-surface-secondary/30 px-1 py-4 shadow-sm outline-none transition-transform focus-visible:ring-2 focus-visible:ring-focus active:scale-[0.97]"
           >
-            <HugeiconsIcon
-              icon={meta.icon}
-              className="size-5 text-muted transition-colors group-hover:text-accent"
-            />
-            <span className="text-[11px] font-medium text-foreground">
+            <span className="grid size-10 place-items-center rounded-xl bg-accent/12 text-accent ring-1 ring-inset ring-accent/15">
+              <HugeiconsIcon icon={meta.icon} className="size-5" />
+            </span>
+            <span className="text-xs font-semibold text-foreground">
               {SHORT_LABEL[category]}
             </span>
           </button>

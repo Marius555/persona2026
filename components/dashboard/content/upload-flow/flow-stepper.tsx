@@ -21,7 +21,7 @@ export function FlowStepper({
   onClose,
 }: FlowStepperProps) {
   return (
-    <div className="relative flex items-center justify-center px-3 py-3">
+    <div className="relative flex items-center justify-center px-4 pb-3 pt-4">
       {totalSteps > 0 ? (
         <div className="flex items-center gap-1.5" aria-hidden>
           {Array.from({ length: totalSteps }, (_, i) => (
@@ -44,7 +44,7 @@ export function FlowStepper({
         aria-label="Close"
         disabled={!canClose}
         onClick={() => (canClose ? onClose() : undefined)}
-        className="absolute right-2 top-1/2 grid size-8 -translate-y-1/2 cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-surface-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+        className="absolute right-3 top-1/2 grid size-8 -translate-y-1/2 cursor-pointer place-items-center rounded-full text-muted transition-colors hover:bg-surface-secondary hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
       >
         <HugeiconsIcon icon={Cancel01Icon} className="size-[18px]" />
       </button>

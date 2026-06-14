@@ -16,15 +16,35 @@ export interface NavItem {
   icon: IconSvgElement;
 }
 
+/** A titled, collapsible group of sidebar links. */
+export interface NavGroup {
+  id: string;
+  label: string;
+  items: NavItem[];
+}
+
 /**
- * Dashboard sidebar links. Hrefs are built per-user from these segments against
- * `/auth/<userId>/dashboard`. Only the root, `/content` and `/settings` have
- * real pages today; the rest are scaffolded routes for now.
+ * Dashboard sidebar links, organized into collapsible sections. Hrefs are built
+ * per-user from each item's segment against `/auth/<userId>/dashboard`. Only the
+ * root, `/content` and `/settings` have real pages today; the rest are scaffolded
+ * routes for now.
  */
-export const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", segment: "", icon: DashboardSquare01Icon },
-  { id: "content", label: "Content", segment: "/content", icon: Image01Icon },
-  { id: "persona", label: "Persona", segment: "/persona", icon: AiBrain01Icon },
-  { id: "analytics", label: "Analytics", segment: "/analytics", icon: Analytics01Icon },
-  { id: "settings", label: "Settings", segment: "/settings", icon: Settings01Icon },
+export const NAV_GROUPS: NavGroup[] = [
+  {
+    id: "overview",
+    label: "Overview",
+    items: [
+      { id: "dashboard", label: "Dashboard", segment: "", icon: DashboardSquare01Icon },
+      { id: "content", label: "Content", segment: "/content", icon: Image01Icon },
+      { id: "analytics", label: "Analytics", segment: "/analytics", icon: Analytics01Icon },
+    ],
+  },
+  {
+    id: "management",
+    label: "Management",
+    items: [
+      { id: "persona", label: "Persona", segment: "/persona", icon: AiBrain01Icon },
+      { id: "settings", label: "Settings", segment: "/settings", icon: Settings01Icon },
+    ],
+  },
 ];

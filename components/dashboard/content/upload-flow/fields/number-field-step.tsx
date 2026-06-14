@@ -12,7 +12,7 @@ interface NumberFieldStepProps {
   description?: string;
 }
 
-/** A single number stepper — one field, one step. Kept narrow, not full width. */
+/** A single number stepper — one field, one step. Centered, fits any width. */
 export function NumberFieldStep({
   label,
   value,
@@ -29,12 +29,12 @@ export function NumberFieldStep({
       minValue={minValue}
       maxValue={maxValue}
       step={step}
-      className="w-full max-w-[240px] text-left"
+      className="mx-auto w-full max-w-[320px] text-left"
     >
       <Label>{label}</Label>
       <NumberField.Group>
         <NumberField.DecrementButton />
-        <NumberField.Input />
+        <NumberField.Input className="text-center" />
         <NumberField.IncrementButton />
       </NumberField.Group>
       {description ? <Description>{description}</Description> : null}

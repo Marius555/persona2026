@@ -96,3 +96,50 @@ export const createContentSchema = z
   });
 
 export type CreateContent = z.infer<typeof createContentSchema>;
+
+/**
+ * One edit to an existing offering, discriminated by `contentType`. Mirrors
+ * `createContentSchema` minus file batching — the media file itself is never
+ * swapped, only its terms and copy. The `contentType` must match the row being
+ * edited (the route enforces this); it can't be changed after creation.
+ */
+export const updateContentSchema = z
+  .discriminatedUnion("contentType", [
+    z.object({
+      contentType: z.literal("file"),
+      ...termsShape,
+      title: z.string().trim().max(120).nullish(),
+      description: z.string().trim().max(1000).nullish(),
+    }),
+    z.object({
+      contentType: z.literal("discount"),
+      ...termsShape,
+      title: titleSchema,
+      description: z.string().trim().max(1000).nullish(),
+      discountPercent: z
+        .number()
+        .int()
+        .min(1, "Set a discount of at least 1%")
+        .max(100),
+    }),
+    z.object({
+      contentType: z.literal("event"),
+      ...termsShape,
+      title: titleSchema,
+      description: z.string().trim().max(1000).nullish(),
+      eventAt: z.string().trim().min(1, "Pick a date and time").max(40),
+      eventLocation: z.string().trim().max(300).nullish(),
+    }),
+    z.object({
+      contentType: z.literal("perk"),
+      ...termsShape,
+      title: titleSchema,
+      description: z.string().trim().min(1, "Describe the perk").max(1000),
+    }),
+  ])
+  .refine((d) => d.tier !== "gamble" || !!d.rarity, {
+    message: "Pick a rarity for a gamble drop",
+    path: ["rarity"],
+  });
+
+export type UpdateContent = z.infer<typeof updateContentSchema>;

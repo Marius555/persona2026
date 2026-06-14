@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 
 import { ToastProvider } from "@/components/toast-provider";
@@ -19,20 +20,23 @@ export const metadata: Metadata = {
   description: "Build your AI-powered creator persona, manage your content, and grow your audience with persona2.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Theme is rendered server-side from a cookie so there's no flash and no
+  // client-side mutation of <html> (which would cause a hydration mismatch).
+  // When unset, CSS `prefers-color-scheme` in globals.css follows the OS.
+  const theme = (await cookies()).get("theme")?.value;
+  const themeClass = theme === "dark" ? "dark" : theme === "light" ? "light" : "";
+
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${themeClass}`}
     >
       <body className="min-h-full flex flex-col">
-        {/* Prevents flash of wrong theme before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')}catch(e){}` }} />
         {children}
         <ToastProvider />
       </body>

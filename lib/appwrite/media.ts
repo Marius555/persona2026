@@ -1,8 +1,8 @@
 import "server-only";
 
-import { listContentFileIds } from "./content";
+import { deleteContentRowsByFileId, listContentFileIds } from "./content";
 import { createAdminStorage, STORAGE_ID } from "./db";
-import { getProfileByUserId } from "./profile";
+import { getProfileByUserId, upsertProfile } from "./profile";
 import type { MediaType } from "@/lib/validation/content";
 
 /** One reusable file in the creator's media pool. */
@@ -51,6 +51,31 @@ export async function getMediaPool(userId: string): Promise<PoolFile[]> {
   );
 
   return files.filter((f): f is PoolFile => f !== null);
+}
+
+/**
+ * Permanently remove a file from the caller's pool: delete any content rows that
+ * reference it, drop it from the profile's onboarding list, then delete the stored
+ * file itself. After this the file is gone from the vault everywhere.
+ */
+export async function deletePoolFile(
+  userId: string,
+  fileId: string,
+): Promise<void> {
+  await deleteContentRowsByFileId(userId, fileId);
+
+  const profile = await getProfileByUserId(userId);
+  if (profile?.contentFileIds?.includes(fileId)) {
+    await upsertProfile(userId, {
+      contentFileIds: profile.contentFileIds.filter((id) => id !== fileId),
+    });
+  }
+
+  try {
+    await createAdminStorage().deleteFile({ bucketId: STORAGE_ID, fileId });
+  } catch {
+    // Already gone from storage — nothing left to delete.
+  }
 }
 
 /** True when `fileId` belongs to the caller (so the file proxy may serve it). */

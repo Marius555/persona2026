@@ -3,7 +3,7 @@ import "server-only";
 import { ID, Permission, Query, Role } from "node-appwrite";
 
 import { CONTENT_TABLE_ID, createAdminTablesDB, DATABASE_ID } from "./db";
-import type { CreateContent } from "@/lib/validation/content";
+import type { CreateContent, UpdateContent } from "@/lib/validation/content";
 import type {
   ContentRarity,
   ContentTier,
@@ -163,6 +163,54 @@ export async function createContent(
     created.push(row as unknown as ContentRow);
   }
   return created;
+}
+
+/**
+ * Apply an edit to an existing offering. `contentType`, `fileId`, and `mediaType`
+ * are immutable, so only the terms and type-specific columns are written. Rarity
+ * is cleared unless the row is a gamble drop, mirroring `createContent`.
+ */
+export async function updateContent(
+  id: string,
+  payload: UpdateContent,
+): Promise<ContentRow> {
+  const db = createAdminTablesDB();
+  const { tier, rarity, tokenValue } = payload;
+
+  const data: Record<string, unknown> = {
+    tier,
+    rarity: tier === "gamble" ? rarity ?? null : null,
+    tokenValue: tokenValue ?? null,
+    title: payload.title?.trim() || null,
+    description: payload.description?.trim() || null,
+  };
+  if (payload.contentType === "discount") {
+    data.discountPercent = payload.discountPercent;
+  } else if (payload.contentType === "event") {
+    data.eventAt = payload.eventAt;
+    data.eventLocation = payload.eventLocation?.trim() || null;
+  }
+
+  const row = await db.updateRow({
+    databaseId: DATABASE_ID,
+    tableId: CONTENT_TABLE_ID,
+    rowId: id,
+    data,
+  });
+  return row as unknown as ContentRow;
+}
+
+/** Delete every one of the caller's content rows that references `fileId`. */
+export async function deleteContentRowsByFileId(
+  userId: string,
+  fileId: string,
+): Promise<void> {
+  const rows = await listContentByUserId(userId);
+  for (const row of rows) {
+    if (row.fileId === fileId) {
+      await deleteContentRow(row.$id);
+    }
+  }
 }
 
 /**

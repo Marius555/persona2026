@@ -6,7 +6,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 
-import type { MediaType } from "@/lib/validation/content";
+import type {
+  ContentRarity,
+  ContentTier,
+  MediaType,
+} from "@/lib/validation/content";
 
 /** A non-file offer the creator can publish (no gamble/tier/price terms). */
 export type OfferType = "discount" | "event" | "perk";
@@ -14,17 +18,32 @@ export type OfferType = "discount" | "event" | "perk";
 /** Everything the creator can add from the wizard — media plus the offers. */
 export type ContentCategory = "media" | OfferType;
 
-/** An uploaded photo or clip in the creator's media pool. */
-export interface FileItem {
+/** The editable distribution terms shared by every content row. */
+export interface OfferTerms {
+  tier: ContentTier;
+  rarity: ContentRarity | null;
+  tokenValue: number | null;
+}
+
+/**
+ * An uploaded photo or clip in the creator's media pool. When the file has been
+ * published as an offering, `rowId` and the terms/copy are filled; raw onboarding
+ * uploads have `rowId === null` (delete-only, no editable terms).
+ */
+export interface FileItem extends Partial<OfferTerms> {
   kind: "file";
   fileId: string;
   mediaType: MediaType;
   /** Same-origin proxy URL streaming the (private) file. */
   src: string;
+  /** The backing content row id, or null for a raw onboarding upload. */
+  rowId: string | null;
+  title?: string | null;
+  description?: string | null;
 }
 
 /** A discount / event / perk offer. */
-export interface OfferItem {
+export interface OfferItem extends OfferTerms {
   kind: "offer";
   id: string;
   contentType: OfferType;

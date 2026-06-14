@@ -7,7 +7,6 @@ import { motion, useReducedMotion } from "framer-motion";
 
 import type { ContentCategory } from "../../content-meta";
 import { StepReveal } from "../step-reveal";
-import type { MediaPreview } from "../fields/media-files-step";
 
 interface StepPublishingProps {
   category: ContentCategory;
@@ -15,38 +14,28 @@ interface StepPublishingProps {
   /** Upload progress 0–1 (media batches only). */
   progress: number;
   count: number;
-  previews: MediaPreview[];
   /** Human label for the offer being published (non-media). */
   offerLabel: string;
 }
 
 /**
- * Terminal step: a progress/spinner state then a celebratory reveal. Media
- * batches reuse the thumbnail reveal; offers get a compact generic confirmation.
+ * Terminal step: an in-progress state (media upload bar / offer spinner) then a
+ * single clean confirmation — success icon, title, subtitle — for every category.
  */
 export function StepPublishing({
   category,
   phase,
   progress,
   count,
-  previews,
   offerLabel,
 }: StepPublishingProps) {
   const reduceMotion = useReducedMotion();
 
-  if (category === "media") {
-    return (
-      <StepReveal
-        phase={phase === "publishing" ? "uploading" : "revealed"}
-        progress={progress}
-        count={count}
-        previews={previews}
-      />
-    );
-  }
-
-  // --- offer: publishing then done ---
+  // --- in-progress ---
   if (phase === "publishing") {
+    if (category === "media") {
+      return <StepReveal progress={progress} count={count} />;
+    }
     return (
       <div className="flex flex-col items-center gap-4 py-10 text-center">
         <Spinner size="lg" color="current" className="text-accent" />
@@ -54,6 +43,12 @@ export function StepPublishing({
       </div>
     );
   }
+
+  // --- done: one clean confirmation for every category ---
+  const subtitle =
+    category === "media"
+      ? `${count} ${count === 1 ? "file" : "files"} uploaded.`
+      : `Your ${offerLabel.toLowerCase()} is ready for the agent to hand out.`;
 
   return (
     <div className="flex flex-col items-center gap-4 py-8 text-center">
@@ -67,9 +62,7 @@ export function StepPublishing({
       </motion.span>
       <div className="flex flex-col gap-1">
         <h3 className="text-lg font-bold text-foreground">Added to your vault!</h3>
-        <p className="text-sm text-muted">
-          Your {offerLabel.toLowerCase()} is ready for the agent to hand out.
-        </p>
+        <p className="text-sm text-muted">{subtitle}</p>
       </div>
     </div>
   );

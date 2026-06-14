@@ -4,7 +4,6 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Calendar03Icon,
-  CloudUploadIcon,
   Coins01Icon,
   Comment01Icon,
   Diamond01Icon,
@@ -58,6 +57,8 @@ interface WizardStep {
   id: string;
   icon: IconSvgElement;
   title: string;
+  /** Optional one-line helper under the title. */
+  subtitle?: string;
   render: () => React.ReactNode;
   /** Returns an error message to block Continue, or null when valid. */
   validate?: () => string | null;
@@ -104,8 +105,9 @@ export function AddContentFlow({
     initialCategory,
   );
   const [stepIndex, setStepIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
   const [stepError, setStepError] = useState<string | null>(null);
+  // 1 = moving forward, -1 = moving back. Drives the slide direction.
+  const [direction, setDirection] = useState(1);
 
   // Media batch
   const [files, setFiles] = useState<File[]>([]);
@@ -175,27 +177,6 @@ export function AddContentFlow({
     }
     setPreviews((prev) => prev.filter((_, i) => i !== index));
     setFiles((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  function resetForAnother() {
-    objectUrls.current.forEach(URL.revokeObjectURL);
-    objectUrls.current = [];
-    setFiles([]);
-    setPreviews([]);
-    setTitle("");
-    setDescription("");
-    setDiscountPercent(20);
-    setEventAt(null);
-    setEventLocation("");
-    setTier("exclusive");
-    setRarity("common");
-    setTokenValue(0);
-    setStepError(null);
-    setPhase("idle");
-    setProgress(0);
-    setDirection(1);
-    setCategory(null);
-    setStepIndex(0);
   }
 
   // --- step list ------------------------------------------------------------
@@ -381,6 +362,7 @@ export function AddContentFlow({
       id: "dist-tier",
       icon: SparklesIcon,
       title: "How do fans get this?",
+      subtitle: "Choose whether fans buy it outright or win it in a game.",
       render: () => <TierStep tier={tier} onChange={setTier} />,
     });
     if (tier === "gamble") {
@@ -388,29 +370,31 @@ export function AddContentFlow({
         id: "dist-rarity",
         icon: Diamond01Icon,
         title: "Pick a rarity",
+        subtitle: "Rarer drops appear less often and feel more valuable.",
         render: () => <RarityStep rarity={rarity} onChange={setRarity} />,
       });
     }
-    steps.push({
-      id: "dist-value",
-      icon: Coins01Icon,
-      title: tier === "gamble" ? "Set the pot value" : "Set a price",
-      render: () => (
-        <NumberFieldStep
-          label={tier === "gamble" ? "Pot value (tokens)" : "Price (tokens)"}
-          value={tokenValue}
-          onChange={setTokenValue}
-          minValue={0}
-          maxValue={1_000_000}
-          step={10}
-          description={
-            tier === "gamble"
-              ? "Tokens this drop is worth when a fan wins it."
-              : "Starting token price — the agent adapts it per fan."
-          }
-        />
-      ),
-    });
+    // A drop is won, not bought — only the Exclusive tier sets a price.
+    if (tier !== "gamble") {
+      steps.push({
+        id: "dist-value",
+        icon: Coins01Icon,
+        title: "Set a price",
+        subtitle:
+          "Tokens are the in-app credits fans buy with real money and spend on your vault.",
+        render: () => (
+          <NumberFieldStep
+            label="Price (tokens)"
+            value={tokenValue}
+            onChange={setTokenValue}
+            minValue={0}
+            maxValue={1_000_000}
+            step={10}
+            description="The starting price — your agent fine-tunes it per fan."
+          />
+        ),
+      });
+    }
 
     return steps;
   }
@@ -428,9 +412,9 @@ export function AddContentFlow({
   // --- navigation -----------------------------------------------------------
 
   function pickCategory(next: ContentCategory) {
+    setDirection(1);
     setCategory(next);
     setStepError(null);
-    setDirection(1);
     setStepIndex(0);
   }
 
@@ -441,26 +425,25 @@ export function AddContentFlow({
       return;
     }
     setStepError(null);
+    setDirection(1);
     if (isLast) {
       void publish();
       return;
     }
-    setDirection(1);
     setStepIndex((i) => i + 1);
   }
 
   function goBack() {
     setStepError(null);
+    setDirection(-1);
     if (safeIndex === 0) {
       if (initialCategory) {
         onClose();
         return;
       }
-      setDirection(-1);
       setCategory(null);
       return;
     }
-    setDirection(-1);
     setStepIndex((i) => i - 1);
   }
 
@@ -525,19 +508,36 @@ export function AddContentFlow({
       setProgress((i + 1) / (files.length + 1));
     }
 
-    await postContent({
+    const body = (await postContent({
       contentType: "file",
       ...sharedTerms(),
       title: title.trim() || undefined,
       description: description.trim() || undefined,
       items: built,
-    });
+    })) as {
+      content: Array<{
+        $id: string;
+        fileId: string | null;
+        mediaType: MediaType | null;
+        tier: ContentTier;
+        rarity: ContentRarity | null;
+        tokenValue: number | null;
+        title: string | null;
+        description: string | null;
+      }>;
+    };
 
-    const newItems: FileItem[] = built.map((it) => ({
+    const newItems: FileItem[] = body.content.map((row) => ({
       kind: "file",
-      fileId: it.fileId,
-      mediaType: it.mediaType,
-      src: `/api/media/${it.fileId}/file`,
+      fileId: row.fileId ?? "",
+      mediaType: row.mediaType ?? "image",
+      src: `/api/media/${row.fileId}/file`,
+      rowId: row.$id,
+      tier: row.tier,
+      rarity: row.rarity,
+      tokenValue: row.tokenValue,
+      title: row.title,
+      description: row.description,
     }));
     onPublished(newItems);
   }
@@ -547,6 +547,9 @@ export function AddContentFlow({
       content: Array<{
         $id: string;
         contentType: OfferType;
+        tier: ContentTier;
+        rarity: ContentRarity | null;
+        tokenValue: number | null;
         title: string | null;
         description: string | null;
         discountPercent: number | null;
@@ -559,6 +562,9 @@ export function AddContentFlow({
       kind: "offer",
       id: row.$id,
       contentType: row.contentType,
+      tier: row.tier,
+      rarity: row.rarity,
+      tokenValue: row.tokenValue,
       title: row.title,
       description: row.description,
       discountPercent: row.discountPercent,
@@ -570,7 +576,6 @@ export function AddContentFlow({
 
   async function publish() {
     if (!category) return;
-    setDirection(1);
     setPhase("publishing");
     setProgress(0);
     try {
@@ -586,20 +591,17 @@ export function AddContentFlow({
 
   // --- render ---------------------------------------------------------------
 
+  // Directional slide + fade. Forward enters from the right and exits left;
+  // Back reverses. The fixed-size, clipped frame keeps both layers contained.
+  const offset = reduceMotion ? 0 : 32;
   const variants = {
-    enter: (dir: number) => ({
-      x: reduceMotion ? 0 : dir > 0 ? 48 : -48,
-      opacity: 0,
-    }),
+    enter: (dir: number) => ({ x: dir > 0 ? offset : -offset, opacity: 0 }),
     center: { x: 0, opacity: 1 },
-    exit: (dir: number) => ({
-      x: reduceMotion ? 0 : dir > 0 ? -48 : 48,
-      opacity: 0,
-    }),
+    exit: (dir: number) => ({ x: dir > 0 ? -offset : offset, opacity: 0 }),
   };
   const transition = reduceMotion
     ? { duration: 0 }
-    : { type: "spring" as const, stiffness: 320, damping: 32 };
+    : { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
 
   const activeKey = onTerminal
     ? "terminal"
@@ -615,7 +617,6 @@ export function AddContentFlow({
           phase={phase === "done" ? "done" : "publishing"}
           progress={progress}
           count={files.length}
-          previews={previews}
           offerLabel={offerLabel}
         />
       );
@@ -623,14 +624,22 @@ export function AddContentFlow({
     if (showChooser) {
       return (
         <>
-          <StepHeader icon={PlusSignIcon} title="Add to your vault" />
+          <StepHeader
+            icon={PlusSignIcon}
+            title="Add to your vault"
+            subtitle="What would you like to share with your fans?"
+          />
           <StepType onSelect={pickCategory} />
         </>
       );
     }
     return (
       <>
-        <StepHeader icon={currentStep.icon} title={currentStep.title} />
+        <StepHeader
+          icon={currentStep.icon}
+          title={currentStep.title}
+          subtitle={currentStep.subtitle}
+        />
         {currentStep.render()}
       </>
     );
@@ -640,23 +649,15 @@ export function AddContentFlow({
     if (onTerminal) {
       if (phase === "publishing") {
         return (
-          <div className="flex items-center justify-center gap-2 px-6 pb-6 pt-2 text-sm text-muted">
+          <div className="flex items-center justify-center gap-2 px-6 pb-6 pt-3 text-sm text-muted sm:px-8">
             <Spinner size="sm" color="current" />
             {category === "media" ? "Uploading — keep this open." : "Publishing…"}
           </div>
         );
       }
       return (
-        <div className="flex items-center gap-3 px-6 pb-6 pt-2">
-          <Button
-            variant="ghost"
-            className="cursor-pointer"
-            onPress={resetForAnother}
-          >
-            <HugeiconsIcon icon={CloudUploadIcon} className="size-4" />
-            Add more
-          </Button>
-          <Button className="ml-auto cursor-pointer" onPress={onClose}>
+        <div className="px-6 pb-6 pt-3 sm:px-8">
+          <Button className="w-full cursor-pointer" onPress={onClose}>
             View vault
           </Button>
         </div>
@@ -664,7 +665,7 @@ export function AddContentFlow({
     }
     if (showChooser) return null;
     return (
-      <div className="flex items-center gap-3 px-6 pb-6 pt-2">
+      <div className="flex items-center gap-3 px-6 pb-6 pt-3 sm:px-8">
         <Button variant="ghost" className="cursor-pointer" onPress={goBack}>
           <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
           Back
@@ -685,15 +686,7 @@ export function AddContentFlow({
       isDismissable={!isPublishing}
       onDismiss={onClose}
     >
-      <motion.div
-        layout={!reduceMotion}
-        transition={{
-          layout: reduceMotion
-            ? { duration: 0 }
-            : { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
-        }}
-        className="flex min-h-0 flex-col"
-      >
+      <div className="flex min-h-0 flex-col">
         <FlowStepper
           stepIndex={safeIndex}
           totalSteps={onTerminal || showChooser ? 0 : steps.length}
@@ -701,8 +694,8 @@ export function AddContentFlow({
           onClose={onClose}
         />
 
-        <div className="max-h-[68vh] overflow-y-auto overflow-x-hidden px-6 pb-2 pt-1">
-          <AnimatePresence mode="popLayout" custom={direction} initial={false}>
+        <div className="relative h-[380px] overflow-hidden sm:h-[400px]">
+          <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={activeKey}
               custom={direction}
@@ -711,35 +704,46 @@ export function AddContentFlow({
               animate="center"
               exit="exit"
               transition={transition}
-              className="flex flex-col gap-6"
+              className="absolute inset-0 flex flex-col overflow-y-auto overflow-x-hidden px-6 py-2 sm:px-8"
             >
-              {renderActive()}
+              <div className="my-auto flex w-full flex-col gap-7">
+                {renderActive()}
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
 
         {renderFooter()}
-      </motion.div>
+      </div>
     </FlowShell>
   );
 }
 
-/** The centered icon + title that opens every step (onboarding pattern). */
+/** The centered icon + title (+ optional subtitle) that opens every step. */
 function StepHeader({
   icon,
   title,
+  subtitle,
 }: {
   icon: IconSvgElement;
   title: string;
+  subtitle?: string;
 }) {
   return (
     <header className="flex flex-col items-center gap-3 text-center">
-      <span className="grid size-16 place-items-center rounded-2xl bg-accent/12 text-accent">
-        <HugeiconsIcon icon={icon} className="size-8" />
+      <span className="grid size-14 place-items-center rounded-2xl bg-accent/12 text-accent ring-1 ring-inset ring-accent/15">
+        <HugeiconsIcon icon={icon} className="size-7" />
       </span>
-      <h2 className="text-2xl font-bold tracking-tight text-foreground">
-        {title}
-      </h2>
+      <div className="flex flex-col gap-1.5">
+        <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+          {title}
+        </h2>
+        {subtitle ? (
+          <p className="mx-auto max-w-xs text-balance text-sm leading-relaxed text-muted">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
     </header>
   );
 }

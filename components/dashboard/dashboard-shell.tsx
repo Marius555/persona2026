@@ -8,6 +8,7 @@ import { useState } from "react";
 
 import { NotificationButton } from "./notification-button";
 import { SidebarNav } from "./sidebar-nav";
+import { TopbarSearch } from "./topbar-search";
 import { UserMenu, type UserMenuProps } from "./user-menu";
 import { Separator } from "@heroui/react";
 
@@ -87,7 +88,7 @@ export function DashboardShell({
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 shrink-0 items-center justify-between bg-transparent px-4">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-3 bg-transparent px-4">
           <Button
             isIconOnly
             variant="tertiary"
@@ -96,7 +97,8 @@ export function DashboardShell({
           >
             <HugeiconsIcon icon={Menu01Icon} className="size-5" />
           </Button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <TopbarSearch />
             <NotificationButton />
             <UserMenu userId={userId} {...user} />
           </div>

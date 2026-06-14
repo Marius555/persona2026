@@ -63,7 +63,7 @@ export function FlowShell({
       <Modal.Container size="lg">
         <Modal.Dialog
           aria-label={ariaLabel}
-          className="flex max-h-[88vh] flex-col overflow-hidden p-0! sm:max-w-md"
+          className="flex max-h-[90vh] flex-col overflow-hidden rounded-3xl! p-0! sm:max-w-lg"
         >
           {children}
         </Modal.Dialog>

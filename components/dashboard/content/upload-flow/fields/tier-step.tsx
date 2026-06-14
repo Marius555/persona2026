@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CheckmarkCircle02Icon,
   GameController01Icon,
   SquareLock02Icon,
 } from "@hugeicons/core-free-icons";
@@ -15,27 +16,23 @@ interface TierStepProps {
 
 const TIER_OPTIONS = [
   {
-    value: "exclusive" as const,
-    label: "Exclusive",
-    blurb: "Fans pay tokens to unlock it.",
-    icon: SquareLock02Icon,
-    iconClass: "bg-accent/12 text-accent",
-    activeClass: "border-accent bg-accent/5",
-  },
-  {
     value: "gamble" as const,
     label: "Game drop",
     blurb: "Fans win it from a loot box or wheel.",
     icon: GameController01Icon,
-    iconClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-    activeClass: "border-amber-500 bg-amber-500/5",
+  },
+  {
+    value: "exclusive" as const,
+    label: "Exclusive",
+    blurb: "Fans pay tokens to unlock it.",
+    icon: SquareLock02Icon,
   },
 ];
 
-/** Choose how fans get the content — two compact, side-by-side cards. */
+/** Choose how fans get the content — two cohesive, side-by-side cards. */
 export function TierStep({ tier, onChange }: TierStepProps) {
   return (
-    <div className="grid grid-cols-2 gap-2.5 text-left">
+    <div className="grid grid-cols-2 gap-3 text-left">
       {TIER_OPTIONS.map((opt) => {
         const active = tier === opt.value;
         return (
@@ -44,14 +41,24 @@ export function TierStep({ tier, onChange }: TierStepProps) {
             type="button"
             aria-pressed={active}
             onClick={() => onChange(opt.value)}
-            className={`flex cursor-pointer flex-col gap-2.5 rounded-2xl border p-3.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus ${
+            className={`relative flex cursor-pointer flex-col gap-3 rounded-2xl border p-4 text-left shadow-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus active:scale-[0.98] ${
               active
-                ? opt.activeClass
-                : "border-border bg-surface-secondary/40 hover:border-foreground/20"
+                ? "border-accent bg-accent/8 ring-1 ring-accent/30"
+                : "border-border bg-gradient-to-b from-surface-secondary/60 to-surface-secondary/30"
             }`}
           >
+            {active ? (
+              <HugeiconsIcon
+                icon={CheckmarkCircle02Icon}
+                className="absolute right-3 top-3 size-5 text-accent"
+              />
+            ) : null}
             <span
-              className={`grid size-9 place-items-center rounded-xl ${opt.iconClass}`}
+              className={`grid size-10 place-items-center rounded-xl transition-colors ${
+                active
+                  ? "bg-accent/15 text-accent ring-1 ring-inset ring-accent/20"
+                  : "bg-surface-tertiary text-muted"
+              }`}
             >
               <HugeiconsIcon icon={opt.icon} className="size-5" />
             </span>

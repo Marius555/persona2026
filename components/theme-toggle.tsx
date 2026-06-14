@@ -5,14 +5,25 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@heroui/react";
 import { useSyncExternalStore } from "react";
 
+const PREFERS_DARK = "(prefers-color-scheme: dark)";
+
 function subscribe(cb: () => void) {
   const observer = new MutationObserver(cb);
   observer.observe(document.documentElement, { attributeFilter: ["class"] });
-  return () => observer.disconnect();
+  const media = window.matchMedia(PREFERS_DARK);
+  media.addEventListener("change", cb);
+  return () => {
+    observer.disconnect();
+    media.removeEventListener("change", cb);
+  };
 }
 
+/** Effective theme: explicit class wins, else fall back to the OS preference. */
 function getSnapshot() {
-  return document.documentElement.classList.contains("dark");
+  const { classList } = document.documentElement;
+  if (classList.contains("dark")) return true;
+  if (classList.contains("light")) return false;
+  return window.matchMedia(PREFERS_DARK).matches;
 }
 
 function getServerSnapshot() {
@@ -23,9 +34,12 @@ export function ThemeToggle() {
   const isDark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   function toggle() {
+    const next = getSnapshot() ? "light" : "dark";
     const html = document.documentElement;
-    html.classList.toggle("dark");
-    localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
+    html.classList.remove("dark", "light");
+    html.classList.add(next);
+    // Persist for SSR so the server renders the right class on the next load.
+    document.cookie = `theme=${next}; path=/; max-age=31536000; SameSite=Lax`;
   }
 
   return (

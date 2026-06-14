@@ -52,8 +52,8 @@ export function NotificationButton() {
             <div className="mt-3 flex flex-col">
               {NOTIFICATIONS.map((n, i) => (
                 <div key={n.id}>
-                  {i > 0 && <Separator className="my-2" />}
-                  <div className="flex items-start gap-3 rounded-lg px-1 py-1.5 transition-colors hover:bg-default/40">
+                  {i > 0 && <Separator className="my-2 " />}
+                  <div className="flex items-start gap-3 rounded-lg px-1 py-1.5 transition-colors hover:bg-default/40 cursor-pointer">
                     <div className={`mt-0.5 shrink-0 ${n.iconColor}`}>
                       <HugeiconsIcon icon={n.icon} className="size-4" />
                     </div>
