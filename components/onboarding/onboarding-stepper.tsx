@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { useRouteTransition } from "@/components/transitions/transition-provider";
 import type { ProfileRow } from "@/lib/appwrite/profile";
 import { dominantGradient } from "@/lib/color/dominant";
 import type { BotGoal, Niche } from "@/lib/validation/onboarding";
@@ -57,6 +58,7 @@ export function OnboardingStepper({
   initialProfile: ProfileRow | null;
 }) {
   const router = useRouter();
+  const { navigate } = useRouteTransition();
   const reduceMotion = useReducedMotion();
 
   const [step, setStep] = useState(1);
@@ -195,8 +197,8 @@ export function OnboardingStepper({
 
       if (res.ok) {
         toast.success("You're all set! Welcome aboard.");
-        router.push("/");
         router.refresh();
+        navigate("/");
         return;
       }
 

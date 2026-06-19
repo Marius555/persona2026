@@ -6,6 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 
+import { RouteTransition } from "@/components/transitions/route-transition";
 import { NotificationButton } from "./notification-button";
 import { SidebarNav } from "./sidebar-nav";
 import { TopbarSearch } from "./topbar-search";
@@ -104,7 +105,9 @@ export function DashboardShell({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+        <main className="scrollbar-hide flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+          <RouteTransition>{children}</RouteTransition>
+        </main>
       </div>
     </div>
   );

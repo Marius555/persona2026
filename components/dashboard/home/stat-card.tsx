@@ -43,7 +43,7 @@ export function StatCard({
     <Card>
       <Card.Content className="!flex !flex-row items-center justify-between gap-4 p-5">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <p className="truncate text-sm text-muted">{label}</p>
+          <p className="truncate text-sm text-muted font-bold">{label}</p>
           <p className="text-2xl font-bold tracking-tight text-foreground">
             {value}
           </p>

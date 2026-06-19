@@ -1,6 +1,7 @@
 "use client";
 
 import type { DateValue } from "@internationalized/date";
+import { getLocalTimeZone, today } from "@internationalized/date";
 import {
   Calendar,
   DateField,
@@ -13,15 +14,30 @@ interface EventDateStepProps {
   value: DateValue | null;
   onChange: (v: DateValue | null) => void;
   error?: string;
+  /** Earliest selectable date — pass `today(getLocalTimeZone())` to block the past. */
+  minValue?: DateValue;
 }
 
 /** A HeroUI date + time picker (calendar popover) — replaces the native input. */
-export function EventDateStep({ value, onChange, error }: EventDateStepProps) {
+export function EventDateStep({
+  value,
+  onChange,
+  error,
+  minValue,
+}: EventDateStepProps) {
+  // When a `minValue` is supplied (to block the past), also disable the
+  // calendar day cells. The picker's `minValue` only validates the field — the
+  // grid cells need their own `minValue` to actually grey out / be unclickable.
+  // We use the start of today (date-only) so today itself stays selectable and
+  // the time-of-day check is left to the picker's `minValue`.
+  const calendarMinValue = minValue ? today(getLocalTimeZone()) : undefined;
+
   return (
     <DatePicker
       granularity="minute"
       value={value}
       onChange={onChange}
+      minValue={minValue}
       isInvalid={!!error}
       className="w-full text-left"
     >
@@ -37,7 +53,7 @@ export function EventDateStep({ value, onChange, error }: EventDateStepProps) {
         </DateField.Suffix>
       </DateField.Group>
       <DatePicker.Popover>
-        <Calendar aria-label="Event date">
+        <Calendar aria-label="Event date" minValue={calendarMinValue}>
           <Calendar.Header>
             <Calendar.YearPickerTrigger>
               <Calendar.YearPickerTriggerHeading />

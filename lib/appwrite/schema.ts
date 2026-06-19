@@ -19,3 +19,6 @@ export const PROFILES_TABLE_ID = tableId("profiles");
 
 /** Custom (stable) table id for published content (the creator's vault). */
 export const CONTENT_TABLE_ID = tableId("content");
+
+/** Custom (stable) table id for content collections (per-tier groupings). */
+export const COLLECTIONS_TABLE_ID = tableId("collections");

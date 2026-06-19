@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 import "./globals.css";
 
 import { ToastProvider } from "@/components/toast-provider";
+import { RouteTransition } from "@/components/transitions/route-transition";
+import { TransitionProvider } from "@/components/transitions/transition-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,10 +36,12 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${themeClass}`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full overflow-x-hidden antialiased ${themeClass}`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
+        <TransitionProvider>
+          <RouteTransition scope="section">{children}</RouteTransition>
+        </TransitionProvider>
         <ToastProvider />
       </body>
     </html>

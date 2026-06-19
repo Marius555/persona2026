@@ -1,7 +1,8 @@
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { buttonVariants } from "@heroui/react";
-import Link from "next/link";
+
+import { TransitionLink } from "@/components/transitions/transition-link";
 
 /*
  * The single CTA style for the landing page: a Next.js Link styled with HeroUI's
@@ -30,7 +31,7 @@ export function LinkButton({
   className = "",
 }: LinkButtonProps) {
   return (
-    <Link
+    <TransitionLink
       href={href}
       className={`${buttonVariants({ variant, size: "lg" })} group !rounded-full px-7 font-semibold ${NO_HOVER[variant]} ${className}`}
     >
@@ -38,6 +39,6 @@ export function LinkButton({
       {withArrow ? (
         <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" aria-hidden />
       ) : null}
-    </Link>
+    </TransitionLink>
   );
 }

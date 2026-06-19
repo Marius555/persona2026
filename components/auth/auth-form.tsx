@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { SocialButtons } from "@/components/auth/social-buttons";
+import { useRouteTransition } from "@/components/transitions/transition-provider";
 import {
   type FieldErrors,
   loginSchema,
@@ -64,6 +65,7 @@ const COPY: Record<
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const { navigate } = useRouteTransition();
   const isSignup = mode === "signup";
   const copy = COPY[mode];
 
@@ -112,8 +114,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
       });
 
       if (res.ok) {
-        router.push(isSignup ? "/onboarding" : "/");
         router.refresh();
+        navigate(isSignup ? "/onboarding" : "/");
         return;
       }
 

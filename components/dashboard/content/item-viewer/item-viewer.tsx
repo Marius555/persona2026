@@ -3,6 +3,7 @@
 import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, Modal } from "@heroui/react";
@@ -54,14 +55,29 @@ export function ItemViewer({
       variant="blur"
       className="bg-black/90"
     >
-      <Modal.Container>
+      <Modal.Container placement="center">
         <Modal.Dialog
           aria-label="Media viewer"
-          className="!w-auto !max-w-[100vw] !border-0 !bg-transparent !p-0 !shadow-none"
+          className="!h-[88vh] !w-[94vw] !max-w-[1100px] !border-0 !bg-transparent !p-0 !shadow-none"
         >
-          <Modal.CloseTrigger />
-          <div className="relative flex items-center justify-center">
+          {/* Fixed frame: the box stays a constant size so swapping between
+              portrait/landscape media doesn't resize the window — only the
+              image inside changes, fitting via object-contain. */}
+          <div className="relative flex size-full items-center justify-center">
             {current ? <MediaFrame item={current} /> : null}
+
+            {/* Explicit close button layered above the media — the default
+                CloseTrigger sits behind the centered image and can't be
+                clicked where the image overlaps it. */}
+            <Button
+              isIconOnly
+              variant="secondary"
+              aria-label="Close"
+              onPress={onClose}
+              className="absolute right-2 top-2 z-20 size-10 rounded-full shadow-sm"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} className="size-5" />
+            </Button>
 
             {count > 1 && index !== null ? (
               <>
@@ -96,8 +112,10 @@ function MediaFrame({ item }: { item: FileItem }) {
   if (item.mediaType === "video") {
     return (
       <video
+        // Re-mount on source change so the fade restarts for each media item.
+        key={item.src}
         src={item.src}
-        className="max-h-[90vh] max-w-[90vw] rounded-lg"
+        className="max-h-full max-w-full rounded-lg media-fade-in"
         controls
         autoPlay
         playsInline
@@ -107,9 +125,10 @@ function MediaFrame({ item }: { item: FileItem }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      key={item.src}
       src={item.src}
       alt=""
-      className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+      className="max-h-full max-w-full rounded-lg object-contain media-fade-in"
     />
   );
 }

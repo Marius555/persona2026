@@ -55,18 +55,22 @@ export function ItemDrawer({ item, onClose, onUpdated }: ItemDrawerProps) {
 
 function FilePreview({ item }: { item: FileItem }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface-secondary/40">
+    <div className="mx-auto w-fit overflow-hidden rounded-xl border border-border bg-surface-secondary/40">
       {item.mediaType === "video" ? (
         <video
           src={item.src}
-          className="h-auto max-h-[70vh] w-full"
+          className="max-h-48 w-auto object-contain"
           controls
           playsInline
           preload="metadata"
         />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.src} alt="" className="block h-auto w-full" />
+        <img
+          src={item.src}
+          alt=""
+          className="block max-h-48 w-auto object-contain"
+        />
       )}
     </div>
   );

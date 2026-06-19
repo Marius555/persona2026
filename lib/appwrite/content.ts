@@ -27,6 +27,7 @@ export interface ContentRow {
   discountPercent: number | null;
   eventAt: string | null;
   eventLocation: string | null;
+  collectionId: string | null;
 }
 
 /** Every type-specific column, defaulted to null so each insert sets them all. */
@@ -99,6 +100,7 @@ export async function createContent(
     // Rarity only applies to gamble drops.
     rarity: tier === "gamble" ? rarity ?? null : null,
     tokenValue: tokenValue ?? null,
+    collectionId: payload.collectionId ?? null,
   };
   const permissions = [
     Permission.read(Role.user(userId)),
@@ -181,6 +183,7 @@ export async function updateContent(
     tier,
     rarity: tier === "gamble" ? rarity ?? null : null,
     tokenValue: tokenValue ?? null,
+    collectionId: payload.collectionId ?? null,
     title: payload.title?.trim() || null,
     description: payload.description?.trim() || null,
   };

@@ -25,19 +25,16 @@ interface VaultCardProps {
 }
 
 /**
- * A single masonry vault card. File cards size to their media (full width, no
- * crop); offer cards keep a tidy 3/4 shape. The body opens the full-size viewer
- * (files) or the editor (offers); the corner "…" menu holds edit + delete. The
- * menu and body are siblings (not nested buttons) so the markup stays valid.
+ * A single vault card — a uniform 3/4 tile. File media is cropped to fill the
+ * tile (object-cover); offers render a centered summary. The body opens the
+ * full-size viewer (files) or the editor (offers); the corner "…" menu holds
+ * edit + delete. The menu and body are siblings (not nested buttons) so the
+ * markup stays valid.
  */
 export function VaultCard({ item, onView, onEdit, onDelete }: VaultCardProps) {
   const isFile = item.kind === "file";
   return (
-    <div
-      className={`relative mb-3 w-full break-inside-avoid overflow-hidden rounded-2xl border border-border bg-surface-secondary/40 ${
-        isFile ? "" : "aspect-[3/4]"
-      }`}
-    >
+    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border bg-surface-secondary/40">
       <button
         type="button"
         onClick={() => (isFile ? onView(item) : onEdit(item))}
@@ -99,7 +96,7 @@ function FilePreview({ item }: { item: FileItem }) {
       <>
         <video
           src={item.src}
-          className="block w-full h-auto"
+          className="block size-full object-cover"
           muted
           playsInline
           preload="metadata"
@@ -112,7 +109,7 @@ function FilePreview({ item }: { item: FileItem }) {
   }
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={item.src} alt="" className="block w-full h-auto" />
+    <img src={item.src} alt="" className="block size-full object-cover" />
   );
 }
 

@@ -60,10 +60,29 @@
         },
         { "key": "discountPercent", "type": "integer", "min": 0, "max": 100 },
         { "key": "eventAt", "type": "varchar", "size": 40 },
-        { "key": "eventLocation", "type": "varchar", "size": 300 }
+        { "key": "eventLocation", "type": "varchar", "size": 300 },
+        { "key": "collectionId", "type": "varchar", "size": 64 }
       ],
       "indexes": [
         { "key": "idx_content_user", "type": "key", "columns": ["userId"] }
+      ]
+    },
+    {
+      "id": "collections",
+      "name": "collections",
+      "columns": [
+        { "key": "userId", "type": "varchar", "size": 64, "required": true },
+        {
+          "key": "tier",
+          "type": "enum",
+          "elements": ["exclusive", "gamble"],
+          "required": true
+        },
+        { "key": "name", "type": "varchar", "size": 60, "required": true },
+        { "key": "visible", "type": "boolean", "required": false, "default": true }
+      ],
+      "indexes": [
+        { "key": "idx_collections_user", "type": "key", "columns": ["userId"] }
       ]
     }
   ]

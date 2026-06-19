@@ -23,7 +23,26 @@ export interface OfferTerms {
   tier: ContentTier;
   rarity: ContentRarity | null;
   tokenValue: number | null;
+  collectionId: string | null;
 }
+
+/** A named grouping of vault items within a single tier. */
+export interface Collection {
+  id: string;
+  tier: ContentTier;
+  name: string;
+  /** When false, the collection is hidden from fans (creator-only). */
+  visible: boolean;
+}
+
+/** Fan-facing labels for the two content tiers, used by the tier Select. */
+export const TIER_META: Record<ContentTier, { label: string }> = {
+  exclusive: { label: "Exclusive" },
+  gamble: { label: "Games" },
+};
+
+/** Tier order in the Select. */
+export const TIER_ORDER: ContentTier[] = ["exclusive", "gamble"];
 
 /**
  * An uploaded photo or clip in the creator's media pool. When the file has been

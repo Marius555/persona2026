@@ -35,6 +35,7 @@ const termsShape = {
   tier: tierSchema,
   rarity: raritySchema.nullish(),
   tokenValue: z.number().int().min(0).max(1_000_000).nullish(),
+  collectionId: z.string().max(64).nullish(),
 };
 
 /** A single already-uploaded file (from the pool or a fresh upload). */

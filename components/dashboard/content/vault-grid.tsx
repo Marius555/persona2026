@@ -20,7 +20,7 @@ export function VaultGrid({
   onDelete,
 }: VaultGridProps) {
   return (
-    <div className="columns-3 gap-3 sm:columns-4 lg:columns-6">
+    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
       {items.map((item) => (
         <VaultCard
           key={item.kind === "file" ? item.fileId : item.id}

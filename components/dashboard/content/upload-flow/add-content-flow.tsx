@@ -15,12 +15,11 @@ import {
   PencilEdit02Icon,
   PercentIcon,
   PlusSignIcon,
-  SparklesIcon,
   TextFontIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon, type IconSvgElement } from "@hugeicons/react";
 import { Button, Spinner, toast } from "@heroui/react";
-import type { DateValue } from "@internationalized/date";
+import { getLocalTimeZone, now, type DateValue } from "@internationalized/date";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
@@ -46,7 +45,6 @@ import { NumberFieldStep } from "./fields/number-field-step";
 import { RarityStep } from "./fields/rarity-step";
 import { TextAreaStep } from "./fields/textarea-step";
 import { TextFieldStep } from "./fields/text-field-step";
-import { TierStep } from "./fields/tier-step";
 import { FlowShell } from "./flow-shell";
 import { FlowStepper } from "./flow-stepper";
 import { StepPublishing } from "./steps/step-publishing";
@@ -67,6 +65,10 @@ interface WizardStep {
 interface AddContentFlowProps {
   /** Pre-select a category and jump straight to its first field step. */
   initialCategory?: ContentCategory | null;
+  /** Tier of the active collection (mirrors the page's tier Select). */
+  defaultTier?: ContentTier;
+  /** Collection to pre-select (the active tab), or null for none. */
+  defaultCollectionId?: string | null;
   /** Newly published vault items, newest first — prepended to the library. */
   onPublished: (items: VaultItem[]) => void;
   onClose: () => void;
@@ -96,6 +98,8 @@ async function uploadFile(file: File): Promise<string> {
  */
 export function AddContentFlow({
   initialCategory = null,
+  defaultTier = "exclusive",
+  defaultCollectionId = null,
   onPublished,
   onClose,
 }: AddContentFlowProps) {
@@ -122,10 +126,11 @@ export function AddContentFlow({
   const [eventAt, setEventAt] = useState<DateValue | null>(null);
   const [eventLocation, setEventLocation] = useState("");
 
-  // Distribution
-  const [tier, setTier] = useState<ContentTier>("exclusive");
+  // Distribution — tier and collection are locked to where the + was pressed.
+  const [tier] = useState<ContentTier>(defaultTier);
   const [rarity, setRarity] = useState<ContentRarity>("common");
   const [tokenValue, setTokenValue] = useState(0);
+  const [collectionId] = useState<string | null>(defaultCollectionId);
 
   // Publish
   const [phase, setPhase] = useState<"idle" | "publishing" | "done">("idle");
@@ -291,7 +296,7 @@ export function AddContentFlow({
             onChange={setDiscountPercent}
             minValue={1}
             maxValue={100}
-            step={5}
+            step={1}
             description="Percentage off a subscription or purchase."
           />
         ),
@@ -310,7 +315,12 @@ export function AddContentFlow({
         id: "event-when",
         icon: Clock01Icon,
         title: "When is it?",
-        validate: () => (eventAt ? null : "Pick a date and time."),
+        validate: () => {
+          if (!eventAt) return "Pick a date and time.";
+          if (eventAt.compare(now(getLocalTimeZone())) < 0)
+            return "Pick a date and time in the future.";
+          return null;
+        },
         render: () => (
           <EventDateStep
             value={eventAt}
@@ -318,6 +328,7 @@ export function AddContentFlow({
               setEventAt(v);
               clearError();
             }}
+            minValue={now(getLocalTimeZone())}
             error={stepError ?? undefined}
           />
         ),
@@ -357,14 +368,8 @@ export function AddContentFlow({
       );
     }
 
-    // Distribution — appended for every category.
-    steps.push({
-      id: "dist-tier",
-      icon: SparklesIcon,
-      title: "How do fans get this?",
-      subtitle: "Choose whether fans buy it outright or win it in a game.",
-      render: () => <TierStep tier={tier} onChange={setTier} />,
-    });
+    // Distribution — appended for every category. Tier and collection are
+    // fixed to where the + was pressed, so only rarity/price remain.
     if (tier === "gamble") {
       steps.push({
         id: "dist-rarity",
@@ -454,6 +459,7 @@ export function AddContentFlow({
       tier,
       rarity: tier === "gamble" ? rarity : undefined,
       tokenValue,
+      collectionId,
     };
   }
 
@@ -536,6 +542,7 @@ export function AddContentFlow({
       tier: row.tier,
       rarity: row.rarity,
       tokenValue: row.tokenValue,
+      collectionId,
       title: row.title,
       description: row.description,
     }));
@@ -565,6 +572,7 @@ export function AddContentFlow({
       tier: row.tier,
       rarity: row.rarity,
       tokenValue: row.tokenValue,
+      collectionId,
       title: row.title,
       description: row.description,
       discountPercent: row.discountPercent,

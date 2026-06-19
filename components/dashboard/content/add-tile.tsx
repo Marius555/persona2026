@@ -13,7 +13,7 @@ export function AddTile({ onAdd }: AddTileProps) {
     <button
       type="button"
       onClick={onAdd}
-      className="mb-3 flex aspect-[3/4] w-full break-inside-avoid cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-border bg-surface-secondary/40 text-muted outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus"
+      className="flex aspect-[3/4] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-border bg-surface-secondary/40 text-muted outline-none transition-colors focus-visible:ring-2 focus-visible:ring-focus"
     >
       <HugeiconsIcon icon={PlusSignIcon} className="size-5 text-accent" />
       <span className="text-[11px]">Add</span>

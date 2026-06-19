@@ -1,16 +1,13 @@
 "use client";
 
-import {
-  CreditCardIcon,
-  Logout01Icon,
-  Settings01Icon,
-  UserIcon,
-} from "@hugeicons/core-free-icons";
+import { Logout01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { Avatar, Dropdown, Label, toast } from "@heroui/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Separator } from '@heroui/react';
+
+import { useRouteTransition } from "@/components/transitions/transition-provider";
 
 export interface UserMenuProps {
   userId: string;
@@ -29,19 +26,14 @@ function initialsOf(name: string, email: string): string {
 
 export function UserMenu({ userId, displayName, email, avatarUrl }: UserMenuProps) {
   const router = useRouter();
+  const { navigate } = useRouteTransition();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const initials = initialsOf(displayName, email);
 
   async function handleAction(key: React.Key) {
     switch (key) {
-      case "profile":
-        router.push(`/auth/${userId}/dashboard/profile`);
-        return;
       case "settings":
-        router.push(`/auth/${userId}/dashboard/settings`);
-        return;
-      case "billing":
-        router.push(`/auth/${userId}/dashboard/billing`);
+        navigate(`/auth/${userId}/dashboard/settings`);
         return;
       case "logout": {
         if (isLoggingOut) return;
@@ -49,8 +41,8 @@ export function UserMenu({ userId, displayName, email, avatarUrl }: UserMenuProp
         try {
           const res = await fetch("/api/auth/logout", { method: "POST" });
           if (!res.ok) throw new Error();
-          router.push("/login");
           router.refresh();
+          navigate("/login");
         } catch {
           setIsLoggingOut(false);
           toast.danger("Couldn't log you out. Please try again.");
@@ -83,22 +75,10 @@ export function UserMenu({ userId, displayName, email, avatarUrl }: UserMenuProp
         </div>
         <Dropdown.Menu onAction={handleAction} disabledKeys={isLoggingOut ? ["logout"] : []}>
           <Separator />
-          <Dropdown.Item id="profile" textValue="Profile">
-            <div className="flex w-full items-center justify-between gap-2">
-              <Label>Profile</Label>
-              <HugeiconsIcon icon={UserIcon} className="size-3.5 text-muted" />
-            </div>
-          </Dropdown.Item>
           <Dropdown.Item id="settings" textValue="Settings">
             <div className="flex w-full items-center justify-between gap-2">
               <Label>Settings</Label>
               <HugeiconsIcon icon={Settings01Icon} className="size-3.5 text-muted" />
-            </div>
-          </Dropdown.Item>
-          <Dropdown.Item id="billing" textValue="Billing">
-            <div className="flex w-full items-center justify-between gap-2">
-              <Label>Billing</Label>
-              <HugeiconsIcon icon={CreditCardIcon} className="size-3.5 text-muted" />
             </div>
           </Dropdown.Item>
           <Separator />

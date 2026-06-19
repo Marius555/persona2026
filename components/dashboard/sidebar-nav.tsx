@@ -3,10 +3,10 @@
 import { ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { TransitionLink } from "@/components/transitions/transition-link";
 import { NAV_GROUPS } from "./nav-items";
 
 /**
@@ -73,10 +73,10 @@ export function SidebarNav({
                           pathname.startsWith(`${href}/`));
 
                       return (
-                        <Link
+                        <TransitionLink
                           key={item.id}
                           href={href}
-                          onClick={onNavigate}
+                          onNavigate={onNavigate}
                           aria-current={isActive ? "page" : undefined}
                           className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
                             isActive
@@ -89,7 +89,7 @@ export function SidebarNav({
                             className="size-5 shrink-0"
                           />
                           {item.label}
-                        </Link>
+                        </TransitionLink>
                       );
                     })}
                   </div>
