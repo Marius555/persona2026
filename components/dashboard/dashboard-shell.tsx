@@ -1,19 +1,29 @@
 "use client";
 
-import { Menu01Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { Button, Drawer } from "@heroui/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { motion, useReducedMotion } from "framer-motion";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { RouteTransition } from "@/components/transitions/route-transition";
 import { NotificationButton } from "./notification-button";
 import { SidebarNav } from "./sidebar-nav";
-import { TopbarSearch } from "./topbar-search";
 import { UserMenu, type UserMenuProps } from "./user-menu";
 import { Separator } from "@heroui/react";
 
 const SIDEBAR_WIDTH = "16rem";
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
+/** Track whether the viewport is at desktop width, the lg breakpoint above. */
+function subscribeDesktop(cb: () => void) {
+  const media = window.matchMedia(DESKTOP_QUERY);
+  media.addEventListener("change", cb);
+  return () => media.removeEventListener("change", cb);
+}
+function getDesktopSnapshot() {
+  return window.matchMedia(DESKTOP_QUERY).matches;
+}
 
 function Brand() {
   return (
@@ -46,6 +56,16 @@ export function DashboardShell({
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // The header is shared across breakpoints, so the toggle's open-state is the
+  // desktop sidebar above lg and the mobile drawer below it. Default to "desktop"
+  // on the server so the first paint matches the lg-and-up layout (sidebar open).
+  const isDesktop = useSyncExternalStore(
+    subscribeDesktop,
+    getDesktopSnapshot,
+    () => true,
+  );
+  const sidebarOpen = isDesktop ? !desktopCollapsed : mobileOpen;
+
   function handleToggle() {
     if (
       typeof window !== "undefined" &&
@@ -70,7 +90,7 @@ export function DashboardShell({
         }
         className="hidden shrink-0 overflow-hidden bg-surface lg:block"
       >
-        <div className="flex h-full w-64 flex-col border-r border-border">
+        <div className="flex h-full w-64 flex-col border-r border-border bg-gradient-to-br from-accent/10 to-surface-secondary/40">
           <Brand />
           <SidebarNav userId={userId} />
         </div>
@@ -79,7 +99,7 @@ export function DashboardShell({
       {/* Mobile drawer — controlled, closed by default. Only opened on < lg. */}
       <Drawer.Backdrop isOpen={mobileOpen} onOpenChange={setMobileOpen}>
         <Drawer.Content placement="left">
-          <Drawer.Dialog className="w-64 max-w-[80vw] p-0">
+          <Drawer.Dialog className="w-64 max-w-[80vw] bg-gradient-to-br from-accent/10 to-surface-secondary/40 p-0">
             <Drawer.CloseTrigger />
             <Brand />
             <SidebarNav userId={userId} onNavigate={() => setMobileOpen(false)} />
@@ -93,13 +113,15 @@ export function DashboardShell({
           <Button
             isIconOnly
             variant="tertiary"
-            aria-label="Toggle sidebar"
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             onPress={handleToggle}
           >
-            <HugeiconsIcon icon={Menu01Icon} className="size-5" />
+            <HugeiconsIcon
+              icon={sidebarOpen ? ArrowLeft01Icon : ArrowRight01Icon}
+              className="size-5"
+            />
           </Button>
           <div className="flex items-center gap-3">
-            <TopbarSearch />
             <NotificationButton />
             <UserMenu userId={userId} {...user} />
           </div>

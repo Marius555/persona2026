@@ -38,9 +38,9 @@ export const completeOnboardingSchema = z.object({
   avatarFileId: z.string().max(64).nullish(),
   bannerFileId: z.string().max(64).nullish(),
   bgGradient: z.string().max(512).nullish(),
-  contentFileIds: z
-    .array(z.string().max(64))
-    .min(1, "Upload at least one piece of content"),
+  // Onboarding content is now persisted as real `content` rows (filed under the
+  // default collection), so the profile no longer needs the raw file ids.
+  contentFileIds: z.array(z.string().max(64)).optional().default([]),
   botGoal: botGoalSchema,
 });
 

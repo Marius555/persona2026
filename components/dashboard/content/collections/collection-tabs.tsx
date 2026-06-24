@@ -19,7 +19,7 @@ interface CollectionTabsProps {
 
 /** Keep tab labels compact so many collections stay visible at once. */
 function truncateLabel(name: string) {
-  return name.length > 10 ? `${name.slice(0, 10)}…` : name;
+  return name.length > 20 ? `${name.slice(0, 20)}…` : name;
 }
 
 /**

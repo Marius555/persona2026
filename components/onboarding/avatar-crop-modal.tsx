@@ -173,7 +173,7 @@ export function AvatarCropModal({
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
               onPointerCancel={onPointerUp}
-              className="relative mx-auto aspect-square w-full max-w-[280px] cursor-grab touch-none select-none overflow-hidden rounded-2xl bg-black active:cursor-grabbing"
+              className="relative mx-auto aspect-square w-full max-w-[280px] cursor-grab touch-none select-none overflow-hidden rounded-2xl bg-surface-tertiary active:cursor-grabbing"
             >
               {src ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
@@ -193,7 +193,7 @@ export function AvatarCropModal({
               <span
                 aria-hidden
                 className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-overlay-foreground/60"
-                style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)" }}
+                style={{ boxShadow: "0 0 0 9999px var(--crop-scrim)" }}
               />
             </div>
 

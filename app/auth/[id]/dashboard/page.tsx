@@ -3,6 +3,9 @@ import { redirect } from "next/navigation";
 import { FeaturedCard } from "@/components/dashboard/home/featured-card";
 import { StatCard } from "@/components/dashboard/home/stat-card";
 import { WelcomeBanner } from "@/components/dashboard/home/welcome-banner";
+import type { CollectionOption } from "@/components/dashboard/games/game-meta";
+import { listCollectionsByUserId } from "@/lib/appwrite/collections";
+import { listContentByUserId } from "@/lib/appwrite/content";
 import { getProfileByUserId } from "@/lib/appwrite/profile";
 import { getLoggedInUser } from "@/lib/appwrite/server";
 
@@ -37,11 +40,38 @@ export default async function DashboardPage() {
   const user = await getLoggedInUser();
   if (!user) redirect("/login");
 
-  const profile = await getProfileByUserId(user.$id);
+  const [profile, collectionRows, contentRows] = await Promise.all([
+    getProfileByUserId(user.$id),
+    listCollectionsByUserId(user.$id),
+    listContentByUserId(user.$id),
+  ]);
   const displayName =
     user.name || profile?.username || user.email.split("@")[0] || "there";
 
-  const base = `/auth/${user.$id}/dashboard`;
+  // Count content rows per collection once, then split by tier — the game setup
+  // flow folds exclusive collections into the prize pool and sets odds per
+  // Games-tier collection.
+  const itemCountByCollection = new Map<string, number>();
+  for (const row of contentRows) {
+    if (row.collectionId) {
+      itemCountByCollection.set(
+        row.collectionId,
+        (itemCountByCollection.get(row.collectionId) ?? 0) + 1,
+      );
+    }
+  }
+  const toOption = (c: (typeof collectionRows)[number]): CollectionOption => ({
+    id: c.$id,
+    name: c.name,
+    itemCount: itemCountByCollection.get(c.$id) ?? 0,
+    createdAt: c.$createdAt,
+  });
+  const exclusiveCollections = collectionRows
+    .filter((c) => c.tier === "exclusive")
+    .map(toOption);
+  const gameCollections = collectionRows
+    .filter((c) => c.tier === "gamble")
+    .map(toOption);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
@@ -49,7 +79,8 @@ export default async function DashboardPage() {
         <WelcomeBanner
           className="lg:col-span-2"
           displayName={displayName}
-          href={`${base}/content`}
+          exclusiveCollections={exclusiveCollections}
+          gameCollections={gameCollections}
         />
         <FeaturedCard />
       </div>

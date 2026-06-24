@@ -16,9 +16,12 @@ import {
   nicheSchema,
   usernameSchema,
 } from "@/lib/validation/onboarding";
+import { createCollectionRequest } from "@/components/dashboard/content/collections/collection-api";
+import { AddContentFlow } from "@/components/dashboard/content/upload-flow/add-content-flow";
+import type { StagedContent } from "@/components/dashboard/content/content-meta";
 import { NEUTRAL_GRADIENT, PAGE_BACKDROP, STEP_META, TOTAL_STEPS } from "./constants";
 import { StepProgressBubbles } from "./step-progress-bubbles";
-import { StepContent, type ContentItem } from "./steps/step-content";
+import { StepContentPool } from "./steps/step-content-pool";
 import { StepGoal } from "./steps/step-goal";
 import { StepHandle } from "./steps/step-handle";
 import { StepNiche } from "./steps/step-niche";
@@ -31,10 +34,12 @@ interface FormState {
   avatarPreview: string | null;
   bannerFile: File | null;
   bannerPreview: string | null;
-  bannerSkipped: boolean;
-  contentItems: ContentItem[];
+  contentItems: StagedContent[];
   botGoal: BotGoal | null;
 }
+
+/** The default collection every onboarding item is filed under. */
+const DEFAULT_COLLECTION_NAME = "First Collection";
 
 async function uploadFile(
   file: File,
@@ -64,6 +69,7 @@ export function OnboardingStepper({
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [flowOpen, setFlowOpen] = useState(false);
   const [errors, setErrors] = useState<{ username?: string; content?: string }>({});
   const [data, setData] = useState<FormState>(() => ({
     username: initialProfile?.username ?? "",
@@ -72,7 +78,6 @@ export function OnboardingStepper({
     avatarPreview: null,
     bannerFile: null,
     bannerPreview: null,
-    bannerSkipped: false,
     contentItems: [],
     botGoal: initialProfile?.botGoal ?? null,
   }));
@@ -119,7 +124,7 @@ export function OnboardingStepper({
     const url = trackUrl(URL.createObjectURL(file));
     setData((d) => {
       dropUrl(d.bannerPreview);
-      return { ...d, bannerFile: file, bannerPreview: url, bannerSkipped: false };
+      return { ...d, bannerFile: file, bannerPreview: url };
     });
   }
   function clearBanner() {
@@ -128,30 +133,89 @@ export function OnboardingStepper({
       return { ...d, bannerFile: null, bannerPreview: null };
     });
   }
-  function addContent(files: File[]) {
-    const valid = files.filter(
-      (f) => f.type.startsWith("image/") || f.type.startsWith("video/"),
-    );
-    if (valid.length < files.length) {
-      toast.danger("Only images and video clips are supported.");
+
+  // --- staged content (from the add-content wizard) ---
+  function addStagedItem(item: StagedContent) {
+    // The wizard handed us ownership of its preview object URLs; track them so
+    // they're revoked on unmount or removal.
+    if (item.category === "media") {
+      item.previews.forEach((p) => trackUrl(p.url));
     }
-    if (!valid.length) return;
-    const items: ContentItem[] = valid.map((file) => ({
-      file,
-      url: trackUrl(URL.createObjectURL(file)),
-      kind: file.type.startsWith("video") ? "video" : "image",
-    }));
-    setData((d) => ({ ...d, contentItems: [...d.contentItems, ...items] }));
+    setData((d) => ({ ...d, contentItems: [...d.contentItems, item] }));
     setErrors((e) => ({ ...e, content: undefined }));
+    setFlowOpen(false);
   }
-  function removeContent(index: number) {
+  function removeStagedItem(index: number) {
     setData((d) => {
-      dropUrl(d.contentItems[index]?.url ?? null);
+      const item = d.contentItems[index];
+      if (item?.category === "media") {
+        item.previews.forEach((p) => dropUrl(p.url));
+      }
       return {
         ...d,
         contentItems: d.contentItems.filter((_, i) => i !== index),
       };
     });
+  }
+
+  /** Persist one staged item as a content row filed under `collectionId`. */
+  async function persistStaged(item: StagedContent, collectionId: string) {
+    const terms = {
+      tier: "gamble" as const,
+      rarity: item.rarity,
+      tokenValue: item.tokenValue,
+      collectionId,
+    };
+    let payload: Record<string, unknown>;
+
+    if (item.category === "media") {
+      const built: { fileId: string; mediaType: "image" | "video" }[] = [];
+      for (let i = 0; i < item.files.length; i++) {
+        const fileId = await uploadFile(item.files[i], "content");
+        built.push({ fileId, mediaType: item.previews[i].mediaType });
+      }
+      payload = {
+        contentType: "file",
+        ...terms,
+        title: item.title.trim() || undefined,
+        description: item.description.trim() || undefined,
+        items: built,
+      };
+    } else if (item.category === "discount") {
+      payload = {
+        contentType: "discount",
+        ...terms,
+        title: item.title.trim(),
+        description: item.description.trim() || null,
+        discountPercent: item.discountPercent,
+      };
+    } else if (item.category === "event") {
+      payload = {
+        contentType: "event",
+        ...terms,
+        title: item.title.trim(),
+        description: item.description.trim() || null,
+        eventAt: item.eventAt,
+        eventLocation: item.eventLocation.trim() || null,
+      };
+    } else {
+      payload = {
+        contentType: "perk",
+        ...terms,
+        title: item.title.trim(),
+        description: item.description.trim(),
+      };
+    }
+
+    const res = await fetch("/api/content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new Error(body?.error ?? "Couldn't save your content.");
+    }
   }
 
   async function finish() {
@@ -166,14 +230,17 @@ export function OnboardingStepper({
       const avatarFileId = data.avatarFile
         ? await uploadFile(data.avatarFile, "avatar")
         : null;
-      const bannerFileId =
-        !data.bannerSkipped && data.bannerFile
-          ? await uploadFile(data.bannerFile, "banner")
-          : null;
+      const bannerFileId = data.bannerFile
+        ? await uploadFile(data.bannerFile, "banner")
+        : null;
 
-      const contentFileIds: string[] = [];
+      // Everything added in the stepper is filed under a default Games collection.
+      const collection = await createCollectionRequest(
+        "gamble",
+        DEFAULT_COLLECTION_NAME,
+      );
       for (const item of data.contentItems) {
-        contentFileIds.push(await uploadFile(item.file, "content"));
+        await persistStaged(item, collection.id);
       }
 
       const bgGradient = bannerFileId
@@ -190,7 +257,6 @@ export function OnboardingStepper({
           avatarFileId,
           bannerFileId,
           bgGradient,
-          contentFileIds,
           botGoal: data.botGoal,
         }),
       });
@@ -216,15 +282,6 @@ export function OnboardingStepper({
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  function handleSkip() {
-    if (isSubmitting) return;
-    setData((d) => {
-      dropUrl(d.bannerPreview);
-      return { ...d, bannerFile: null, bannerPreview: null, bannerSkipped: true };
-    });
-    advance();
   }
 
   function handleNext() {
@@ -254,7 +311,7 @@ export function OnboardingStepper({
         return;
       case 4: {
         if (!data.contentItems.length) {
-          setErrors({ content: "Upload at least one piece of content." });
+          setErrors({ content: "Add at least one piece of content." });
           return;
         }
         advance();
@@ -315,11 +372,11 @@ export function OnboardingStepper({
         );
       case 4:
         return (
-          <StepContent
+          <StepContentPool
             items={data.contentItems}
             error={errors.content}
-            onAdd={addContent}
-            onRemove={removeContent}
+            onAdd={() => setFlowOpen(true)}
+            onRemove={removeStagedItem}
           />
         );
       case 5:
@@ -335,6 +392,7 @@ export function OnboardingStepper({
   }
 
   return (
+    <>
     <div className="relative min-h-screen w-full overflow-hidden bg-background">
       <div
         aria-hidden
@@ -396,16 +454,6 @@ export function OnboardingStepper({
                 </Button>
               ) : null}
               <div className="ml-auto flex items-center gap-3">
-                {step === 3 ? (
-                  <Button
-                    className="cursor-pointer"
-                    variant="ghost"
-                    onPress={handleSkip}
-                    isDisabled={isSubmitting}
-                  >
-                    Skip for now
-                  </Button>
-                ) : null}
                 <Button
                   className="cursor-pointer"
                   onPress={handleNext}
@@ -427,5 +475,16 @@ export function OnboardingStepper({
         </motion.div>
       </div>
     </div>
+
+      {flowOpen ? (
+        <AddContentFlow
+          defaultTier="gamble"
+          defaultCollectionId={null}
+          onPublished={() => {}}
+          onStage={addStagedItem}
+          onClose={() => setFlowOpen(false)}
+        />
+      ) : null}
+    </>
   );
 }

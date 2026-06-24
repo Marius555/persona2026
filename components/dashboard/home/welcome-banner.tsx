@@ -1,19 +1,23 @@
 import { Card } from "@heroui/react";
 
-import { LinkButton } from "@/components/landing/link-button";
+import { GameSetupCta } from "@/components/dashboard/games/game-setup-cta";
+import type { CollectionOption } from "@/components/dashboard/games/game-meta";
 
 /**
- * Dashboard hero card: a greeting, a short prompt, and a primary CTA — with a
- * decorative accent wash on the right (no stock illustration asset). Matches the
- * reference's "Welcome back" banner while staying on the project's theme.
+ * Dashboard hero card: a greeting, a short prompt, and a primary CTA that opens
+ * the game setup flow — with a decorative accent wash on the right (no stock
+ * illustration asset). Matches the reference's "Welcome back" banner while staying
+ * on the project's theme.
  */
 export function WelcomeBanner({
   displayName,
-  href,
+  exclusiveCollections,
+  gameCollections,
   className = "",
 }: {
   displayName: string;
-  href: string;
+  exclusiveCollections: CollectionOption[];
+  gameCollections: CollectionOption[];
   className?: string;
 }) {
   return (
@@ -37,9 +41,10 @@ export function WelcomeBanner({
           </p>
         </div>
         <div>
-          <LinkButton href={href} withArrow>
-            Go now
-          </LinkButton>
+          <GameSetupCta
+            exclusiveCollections={exclusiveCollections}
+            gameCollections={gameCollections}
+          />
         </div>
       </Card.Content>
 

@@ -1,7 +1,12 @@
 "use client";
 
 import { Button, Spinner, toast } from "@heroui/react";
-import { parseDateTime, type DateValue } from "@internationalized/date";
+import {
+  getLocalTimeZone,
+  now,
+  parseDateTime,
+  type DateValue,
+} from "@internationalized/date";
 import { useState } from "react";
 
 import type { FileItem, OfferItem, VaultItem } from "../content-meta";
@@ -207,6 +212,7 @@ export function ItemEditForm({ item, onSaved, onClose }: ItemEditFormProps) {
           <EventDateStep
             value={eventDate}
             onChange={setEventDate}
+            minValue={now(getLocalTimeZone())}
             error={error && !eventDate ? error : undefined}
           />
           <TextFieldStep

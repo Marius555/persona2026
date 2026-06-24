@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontalIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { PlusSignIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 
 interface CollectionActionsProps {
@@ -37,7 +37,7 @@ export function CollectionActions({
         onClick={onManageCollection}
         className="flex cursor-pointer items-center px-2.5 py-1.5 text-muted outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus"
       >
-        <HugeiconsIcon icon={MoreHorizontalIcon} className="size-4" />
+        <HugeiconsIcon icon={Settings01Icon} className="size-4" />
       </button>
     </div>
   );

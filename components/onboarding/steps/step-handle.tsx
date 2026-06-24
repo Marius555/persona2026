@@ -6,7 +6,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  FieldError,
   InputGroup,
   Label,
   Spinner,
@@ -120,12 +119,13 @@ export function StepHandle({
             ) : null}
           </InputGroup.Suffix>
         </InputGroup>
-        {usernameError ? <FieldError>{usernameError}</FieldError> : null}
       </TextField>
 
-      {!usernameError && availability.status === "error" ? (
-        <p className="-mt-3 text-xs text-danger">{availability.reason}</p>
-      ) : null}
+      {/* Fixed-height message slot so showing an error never resizes the card. */}
+      <p className="-mt-3 min-h-[1.25rem] text-xs text-danger">
+        {usernameError ??
+          (availability.status === "error" ? availability.reason : "")}
+      </p>
     </div>
   );
 }

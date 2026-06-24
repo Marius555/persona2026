@@ -60,11 +60,16 @@ export function NicheGrid({
           );
         })}
       </div>
-      {selected ? (
-        <p className="text-xs text-muted">
-          Your mascot will lean <span className="text-foreground">{selected.tone}</span>.
-        </p>
-      ) : null}
+      {/* Always reserve two lines so picking a niche never shifts the layout
+          (the longest tone wraps to two lines on narrow screens). */}
+      <p className="min-h-[2.25rem] text-xs text-muted">
+        {selected ? (
+          <>
+            Your mascot will lean{" "}
+            <span className="text-foreground">{selected.tone}</span>.
+          </>
+        ) : null}
+      </p>
     </div>
   );
 }

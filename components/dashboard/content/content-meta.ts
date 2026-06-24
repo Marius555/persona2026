@@ -75,6 +75,53 @@ export interface OfferItem extends OfferTerms {
 
 export type VaultItem = FileItem | OfferItem;
 
+/** A thumbnail preview for a staged (not-yet-uploaded) media file. */
+export interface StagedPreview {
+  url: string;
+  mediaType: MediaType;
+}
+
+/**
+ * A content item built by the add-content wizard in "staging" mode (used during
+ * onboarding): everything needed to create the row later, held client-side until
+ * the final submit. Mirrors the wizard's per-category fields, including the
+ * tier-dependent terms (`rarity` for gamble drops, `tokenValue` otherwise).
+ */
+export type StagedContent =
+  | {
+      category: "media";
+      title: string;
+      description: string;
+      tokenValue: number;
+      rarity: ContentRarity | null;
+      files: File[];
+      previews: StagedPreview[];
+    }
+  | {
+      category: "discount";
+      title: string;
+      description: string;
+      tokenValue: number;
+      rarity: ContentRarity | null;
+      discountPercent: number;
+    }
+  | {
+      category: "event";
+      title: string;
+      description: string;
+      tokenValue: number;
+      rarity: ContentRarity | null;
+      eventAt: string;
+      eventLocation: string;
+    }
+  | {
+      category: "perk";
+      title: string;
+      description: string;
+      tokenValue: number;
+      rarity: ContentRarity | null;
+    };
+
 export const OFFER_META: Record<
   OfferType,
   { label: string; icon: IconSvgElement }

@@ -23,14 +23,22 @@ type RouteTransitionValue = {
 
 const RouteTransitionContext = createContext<RouteTransitionValue | null>(null);
 
-export function useRouteTransition() {
+export function useRouteTransition(): RouteTransitionValue {
   const ctx = useContext(RouteTransitionContext);
-  if (!ctx) {
-    throw new Error(
-      "useRouteTransition must be used within a <TransitionProvider>",
-    );
-  }
-  return ctx;
+  const router = useRouter();
+  return useMemo<RouteTransitionValue>(() => {
+    if (ctx) return ctx;
+    // No provider in the tree — this can happen transiently during HMR or an
+    // in-between SSR pass when a Server Component layout re-renders. Degrade to a
+    // plain navigation instead of crashing the whole page.
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "useRouteTransition: no <TransitionProvider> ancestor found; " +
+          "falling back to router.push (route transition disabled).",
+      );
+    }
+    return { navigate: (href: string) => router.push(href) };
+  }, [ctx, router]);
 }
 
 export function TransitionProvider({

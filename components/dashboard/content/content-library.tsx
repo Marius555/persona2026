@@ -1,7 +1,7 @@
 "use client";
 
 import type { Key } from "@heroui/react";
-import { ListBox, Select } from "@heroui/react";
+import { Tabs } from "@heroui/react";
 import { useMemo, useState } from "react";
 
 import { CollectionBar } from "./collections/collection-bar";
@@ -171,29 +171,22 @@ export function ContentLibrary({
             Content vault
           </h1>
 
-          <Select
+          <Tabs
             aria-label="Content type"
-            className="w-36 shrink-0"
-            value={selectedTier}
-            onChange={(value: Key | null) => {
-              if (value) changeTier(value as ContentTier);
-            }}
+            selectedKey={selectedTier}
+            onSelectionChange={(key: Key) => changeTier(key as ContentTier)}
           >
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
+            <Tabs.ListContainer>
+              <Tabs.List aria-label="Content type">
                 {TIER_ORDER.map((t) => (
-                  <ListBox.Item key={t} id={t} textValue={TIER_META[t].label}>
+                  <Tabs.Tab key={t} id={t}>
                     {TIER_META[t].label}
-                    <ListBox.ItemIndicator />
-                  </ListBox.Item>
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
                 ))}
-              </ListBox>
-            </Select.Popover>
-          </Select>
+              </Tabs.List>
+            </Tabs.ListContainer>
+          </Tabs>
         </div>
 
         <p className="text-sm text-muted">

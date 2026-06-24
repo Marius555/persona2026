@@ -29,6 +29,7 @@ import {
   type FileItem,
   type OfferItem,
   type OfferType,
+  type StagedContent,
   type VaultItem,
 } from "../content-meta";
 import type {
@@ -71,6 +72,12 @@ interface AddContentFlowProps {
   defaultCollectionId?: string | null;
   /** Newly published vault items, newest first — prepended to the library. */
   onPublished: (items: VaultItem[]) => void;
+  /**
+   * Staging mode (onboarding): instead of uploading + publishing, hand the
+   * fully-built item back to the parent to persist later. When set, the wizard
+   * skips the publish/terminal phase and the final button reads "Add".
+   */
+  onStage?: (item: StagedContent) => void;
   onClose: () => void;
 }
 
@@ -101,9 +108,11 @@ export function AddContentFlow({
   defaultTier = "exclusive",
   defaultCollectionId = null,
   onPublished,
+  onStage,
   onClose,
 }: AddContentFlowProps) {
   const reduceMotion = useReducedMotion();
+  const staging = !!onStage;
 
   const [category, setCategory] = useState<ContentCategory | null>(
     initialCategory,
@@ -423,6 +432,58 @@ export function AddContentFlow({
     setStepIndex(0);
   }
 
+  /** Build the staged item from the current field state (staging mode). */
+  function buildStaged(): StagedContent | null {
+    if (!category) return null;
+    const stagedRarity = tier === "gamble" ? rarity : null;
+    switch (category) {
+      case "media":
+        return {
+          category: "media",
+          title,
+          description,
+          tokenValue,
+          rarity: stagedRarity,
+          files: [...files],
+          previews: previews.map((p) => ({
+            url: p.url,
+            mediaType: p.mediaType,
+          })),
+        };
+      case "discount":
+        return {
+          category: "discount",
+          title,
+          description,
+          tokenValue,
+          rarity: stagedRarity,
+          discountPercent,
+        };
+      case "event":
+        return {
+          category: "event",
+          title,
+          description,
+          tokenValue,
+          rarity: stagedRarity,
+          eventAt: eventAt?.toString() ?? "",
+          eventLocation,
+        };
+      case "perk":
+        return { category: "perk", title, description, tokenValue, rarity: stagedRarity };
+    }
+  }
+
+  /** Hand the built item to the parent and close, transferring URL ownership. */
+  function stageCurrent() {
+    const item = buildStaged();
+    if (!item) return;
+    // The parent now owns the preview object URLs, so don't revoke them here.
+    objectUrls.current = [];
+    onStage?.(item);
+    onClose();
+  }
+
   function goNext() {
     const err = currentStep?.validate?.();
     if (err) {
@@ -432,7 +493,8 @@ export function AddContentFlow({
     setStepError(null);
     setDirection(1);
     if (isLast) {
-      void publish();
+      if (staging) stageCurrent();
+      else void publish();
       return;
     }
     setStepIndex((i) => i + 1);
@@ -679,7 +741,7 @@ export function AddContentFlow({
           Back
         </Button>
         <Button className="ml-auto cursor-pointer" onPress={goNext}>
-          {isLast ? "Publish" : "Continue"}
+          {isLast ? (staging ? "Add" : "Publish") : "Continue"}
           {!isLast ? (
             <HugeiconsIcon icon={ArrowRight01Icon} className="size-4" />
           ) : null}
