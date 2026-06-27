@@ -64,6 +64,11 @@ export function CollectionOddsPicker({
   const overlayTransition = reduceMotion
     ? { duration: 0 }
     : { duration: 0.32, ease: [0.4, 0, 0.2, 1] as const };
+  // Springy "pop": the tapped field recedes a touch while the overlay scales
+  // up over it, giving the flat slide some depth. Slight overshoot = the pop.
+  const popTransition = reduceMotion
+    ? { duration: 0 }
+    : { type: "spring" as const, stiffness: 520, damping: 30 };
 
   function clearAll() {
     setOpenId(null);
@@ -105,6 +110,9 @@ export function CollectionOddsPicker({
         </button>
       ) : null}
 
+      {/* The radio fields get their own scroll area (scrollbar hidden) so the
+          step card stays a fixed height no matter how many collections exist. */}
+      <div className="scrollbar-hide flex max-h-[min(40vh,260px)] flex-col gap-2.5 overflow-y-auto">
       {collections.map((collection) => {
         const selected = value.includes(collection.id);
         const rarity = rarityById[collection.id] ?? "common";
@@ -113,13 +121,13 @@ export function CollectionOddsPicker({
         return (
           <div
             key={collection.id}
-            className="relative flex items-stretch overflow-hidden rounded-2xl"
+            className="relative flex shrink-0 items-stretch overflow-hidden rounded-2xl"
           >
             {/* The whole row is one toggle: an unselected row opens the odds
                 overlay; a selected row deselects (no overlay). The border lives on
                 the field (not the container) so the overlay can slide over and
                 cover it. */}
-            <button
+            <motion.button
               type="button"
               aria-pressed={selected}
               aria-label={
@@ -130,8 +138,10 @@ export function CollectionOddsPicker({
               onClick={() =>
                 selected ? deselect(collection.id) : toggleOverlay(collection.id)
               }
+              animate={{ scale: open ? 0.97 : 1 }}
+              transition={popTransition}
               className={[
-                "flex min-w-0 flex-1 cursor-pointer items-stretch gap-3 rounded-2xl border p-2.5 text-left outline-none transition-colors",
+                "flex min-w-0 flex-1 cursor-pointer items-stretch gap-3 rounded-2xl border p-5 text-left outline-none transition-colors",
                 "focus-visible:ring-2 focus-visible:ring-focus",
                 selected
                   ? "border-accent bg-accent/5"
@@ -180,7 +190,7 @@ export function CollectionOddsPicker({
                   <span className="size-2 rounded-full bg-accent" />
                 ) : null}
               </span>
-            </button>
+            </motion.button>
 
             {/* Odds overlay: a transparent backdrop catches taps on the exposed
                 strip to dismiss, while a lifted, brighter panel slides in from the
@@ -202,10 +212,10 @@ export function CollectionOddsPicker({
               {open ? (
                 <motion.div
                   key="panel"
-                  initial={{ x: "100%" }}
-                  animate={{ x: "0%" }}
-                  exit={{ x: "100%" }}
-                  transition={overlayTransition}
+                  initial={{ x: "100%", scale: 0.9 }}
+                  animate={{ x: "0%", scale: 1 }}
+                  exit={{ x: "100%", scale: 0.92 }}
+                  transition={{ x: overlayTransition, scale: popTransition }}
                   className="absolute inset-y-0 right-0 z-20 flex w-3/4 items-center gap-2 rounded-2xl border border-border bg-overlay px-3 shadow-[-16px_0_32px_-16px_rgba(0,0,0,0.35),-2px_0_6px_-3px_rgba(0,0,0,0.2)]"
                 >
                   {/* Column label leading the bubbles. */}
@@ -261,6 +271,7 @@ export function CollectionOddsPicker({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

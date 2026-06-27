@@ -39,12 +39,7 @@ export function StepOdds({
 
   return (
     <div className="flex flex-col gap-2 text-left">
-      <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-medium text-muted">Collections in play</p>
-        <p className="text-xs text-muted">
-          The % is fans&apos; chance to win — rarer tiers win less.
-        </p>
-      </div>
+      <p className="text-xs font-medium text-muted">Collections in play</p>
       <CollectionOddsPicker
         collections={collections}
         value={selectedIds}

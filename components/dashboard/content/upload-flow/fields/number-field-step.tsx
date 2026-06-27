@@ -24,6 +24,7 @@ export function NumberFieldStep({
 }: NumberFieldStepProps) {
   return (
     <NumberField
+      variant="secondary"
       value={value}
       onChange={(v) => onChange(Number.isFinite(v) ? v : 0)}
       minValue={minValue}

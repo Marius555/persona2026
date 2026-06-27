@@ -5,7 +5,7 @@ import {
   StarIcon,
 } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
-import type { DateValue } from "@internationalized/date";
+import { getLocalTimeZone, today, type DateValue } from "@internationalized/date";
 
 import type { ContentRarity } from "@/lib/validation/content";
 
@@ -31,6 +31,16 @@ export interface CollectionOption {
 export interface DateRange {
   start: DateValue;
   end: DateValue;
+}
+
+/**
+ * Campaign window bounds: from today through one month out. A single source of truth
+ * shared by the date-range picker (min/max to disable out-of-range days) and the step
+ * validator, so the calendar UI and the Continue gate stay in agreement.
+ */
+export function campaignDateBounds(): { min: DateValue; max: DateValue } {
+  const min = today(getLocalTimeZone());
+  return { min, max: min.add({ months: 1 }) };
 }
 
 /**

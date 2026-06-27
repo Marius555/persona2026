@@ -9,6 +9,11 @@ interface FlowShellProps {
   ariaLabel: string;
   /** Whether the overlay can be dismissed (off while uploading). */
   isDismissable: boolean;
+  /**
+   * Whether the overlay is open. Flip to false (keeping the component mounted)
+   * to play the slide-out before the parent unmounts it. Defaults to open.
+   */
+  isOpen?: boolean;
   /** Fires when the user dismisses the overlay (backdrop / escape / drag). */
   onDismiss: () => void;
   children: React.ReactNode;
@@ -24,6 +29,7 @@ interface FlowShellProps {
 export function FlowShell({
   ariaLabel,
   isDismissable,
+  isOpen = true,
   onDismiss,
   children,
 }: FlowShellProps) {
@@ -36,7 +42,7 @@ export function FlowShell({
   if (isMobile) {
     return (
       <Drawer.Backdrop
-        isOpen
+        isOpen={isOpen}
         isDismissable={isDismissable}
         onOpenChange={handleOpenChange}
       >
@@ -55,7 +61,7 @@ export function FlowShell({
 
   return (
     <Modal.Backdrop
-      isOpen
+      isOpen={isOpen}
       isDismissable={isDismissable}
       isKeyboardDismissDisabled={!isDismissable}
       onOpenChange={handleOpenChange}

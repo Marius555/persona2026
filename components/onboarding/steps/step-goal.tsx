@@ -18,7 +18,7 @@ const GOAL_OPTIONS: {
 }[] = [
   {
     value: "maximize_tokens",
-    title: "Maximize token sales",
+    title: "Maximize sales",
     description: "The bot pushes micro-transactions heavily.",
     icon: CoinsDollarIcon,
   },

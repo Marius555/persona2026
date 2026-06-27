@@ -24,7 +24,7 @@ const TIER_OPTIONS = [
   {
     value: "exclusive" as const,
     label: "Exclusive",
-    blurb: "Fans pay tokens to unlock it.",
+    blurb: "Fans pay to unlock it.",
     icon: SquareLock02Icon,
   },
 ];

@@ -25,6 +25,7 @@ export function TextAreaStep({
       <span className="text-sm font-medium text-foreground">{label}</span>
       <TextArea
         aria-label={label}
+        variant="secondary"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

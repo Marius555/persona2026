@@ -1,6 +1,7 @@
 import {
   AiBrain01Icon,
   Analytics01Icon,
+  CrownIcon,
   DashboardSquare01Icon,
   Image01Icon,
   Settings01Icon,
@@ -44,6 +45,12 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Management",
     items: [
       { id: "persona", label: "Persona", segment: "/persona", icon: AiBrain01Icon },
+      {
+        id: "subscriptions",
+        label: "Subscriptions",
+        segment: "/subscriptions",
+        icon: CrownIcon,
+      },
       { id: "settings", label: "Settings", segment: "/settings", icon: Settings01Icon },
     ],
   },

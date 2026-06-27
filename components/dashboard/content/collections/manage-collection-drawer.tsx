@@ -1,6 +1,7 @@
 "use client";
 
 import { Drawer } from "@heroui/react";
+import { useState } from "react";
 
 import type { Collection } from "../content-meta";
 import { useIsMobile } from "../item-drawer/use-is-mobile";
@@ -27,6 +28,14 @@ export function ManageCollectionDrawer({
 }: ManageCollectionDrawerProps) {
   const isMobile = useIsMobile();
 
+  // Keep the last collection on screen while the drawer slides closed — nulling
+  // the body the instant `collection` goes null collapses the sheet so the
+  // slide-out is invisible. Adjusting state during render (not in an effect) is
+  // the supported way to retain a value across a prop change.
+  const [shown, setShown] = useState(collection);
+  if (collection && collection !== shown) setShown(collection);
+  const current = collection ?? shown;
+
   return (
     <Drawer.Backdrop
       isOpen={!!collection}
@@ -41,10 +50,10 @@ export function ManageCollectionDrawer({
             <Drawer.Heading>Manage collection</Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="scrollbar-hide">
-            {collection ? (
+            {current ? (
               <ManageCollectionForm
-                key={collection.id}
-                collection={collection}
+                key={current.id}
+                collection={current}
                 onUpdated={onUpdated}
                 onDeleted={onDeleted}
                 onClose={onClose}

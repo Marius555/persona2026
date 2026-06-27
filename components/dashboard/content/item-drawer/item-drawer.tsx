@@ -1,6 +1,7 @@
 "use client";
 
 import { Drawer } from "@heroui/react";
+import { useState } from "react";
 
 import { OFFER_META, type FileItem, type VaultItem } from "../content-meta";
 import { ItemEditForm } from "./item-edit-form";
@@ -18,6 +19,11 @@ function headingFor(item: VaultItem): string {
   return item.rowId ? "Edit media" : "Media details";
 }
 
+/** Stable identity for an item — re-seeds the edit form when a new one opens. */
+function itemKey(item: VaultItem): string {
+  return item.kind === "file" ? item.fileId : item.id;
+}
+
 /**
  * The item detail drawer — right edge on desktop, bottom sheet on mobile. Every
  * item gets the full edit form: offers and published files PATCH their row, while
@@ -25,6 +31,14 @@ function headingFor(item: VaultItem): string {
  */
 export function ItemDrawer({ item, onClose, onUpdated }: ItemDrawerProps) {
   const isMobile = useIsMobile();
+
+  // Keep the last item on screen while the drawer slides closed — nulling the
+  // body the instant `item` goes null collapses the sheet so the slide-out is
+  // invisible. Adjusting state during render (not in an effect) is the supported
+  // way to retain a value across a prop change.
+  const [shown, setShown] = useState(item);
+  if (item && item !== shown) setShown(item);
+  const current = item ?? shown;
 
   return (
     <Drawer.Backdrop
@@ -37,13 +51,18 @@ export function ItemDrawer({ item, onClose, onUpdated }: ItemDrawerProps) {
         <Drawer.Dialog>
           <Drawer.CloseTrigger />
           <Drawer.Header>
-            <Drawer.Heading>{item ? headingFor(item) : ""}</Drawer.Heading>
+            <Drawer.Heading>{current ? headingFor(current) : ""}</Drawer.Heading>
           </Drawer.Header>
           <Drawer.Body className="scrollbar-hide">
-            {item ? (
+            {current ? (
               <div className="flex flex-col gap-5">
-                {item.kind === "file" ? <FilePreview item={item} /> : null}
-                <ItemEditForm item={item} onSaved={onUpdated} onClose={onClose} />
+                {current.kind === "file" ? <FilePreview item={current} /> : null}
+                <ItemEditForm
+                  key={itemKey(current)}
+                  item={current}
+                  onSaved={onUpdated}
+                  onClose={onClose}
+                />
               </div>
             ) : null}
           </Drawer.Body>

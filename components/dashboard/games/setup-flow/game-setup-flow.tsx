@@ -11,8 +11,13 @@ import { useMemo, useState } from "react";
 
 import { FlowShell } from "@/components/dashboard/content/upload-flow/flow-shell";
 import { FlowStepper } from "@/components/dashboard/content/upload-flow/flow-stepper";
+import { useOverlayClose } from "@/components/dashboard/content/upload-flow/use-overlay-close";
 import type { ContentRarity } from "@/lib/validation/content";
-import type { CollectionOption, DateRange } from "../game-meta";
+import {
+  campaignDateBounds,
+  type CollectionOption,
+  type DateRange,
+} from "../game-meta";
 import { StepBasics } from "./steps/step-basics";
 import { StepOdds } from "./steps/step-odds";
 
@@ -48,6 +53,9 @@ export function GameSetupFlow({
   onClose,
 }: GameSetupFlowProps) {
   const reduceMotion = useReducedMotion();
+  // Keep the overlay mounted long enough to play its slide-out before the parent
+  // unmounts us; close() is the single close path for every exit below.
+  const { isOpen, close } = useOverlayClose(onClose, reduceMotion ? 0 : 250);
 
   // Only collections that actually hold content can feed a prize pool.
   const eligibleCollections = useMemo(
@@ -122,6 +130,10 @@ export function GameSetupFlow({
     if (!dateRange?.start || !dateRange?.end) {
       setDateError("Pick a start and end date.");
       ok = false;
+    } else if (dateRange.end.compare(campaignDateBounds().max) > 0) {
+      // The calendar blocks clicks past the bound, but typed segments can exceed it.
+      setDateError("Keep the campaign within a month from today.");
+      ok = false;
     }
     if (
       includeExclusive &&
@@ -186,7 +198,7 @@ export function GameSetupFlow({
     // The draft lives only client-side for now — persistence + the remaining
     // steps are wired once the full stepper is designed.
     toast.success("Game basics saved — more steps coming soon.");
-    onClose();
+    close();
   }
 
   function goNext() {
@@ -202,7 +214,7 @@ export function GameSetupFlow({
   function goBack() {
     setDirection(-1);
     if (safeIndex === 0) {
-      onClose();
+      close();
       return;
     }
     setStepIndex((i) => i - 1);
@@ -220,13 +232,18 @@ export function GameSetupFlow({
     : { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const };
 
   return (
-    <FlowShell ariaLabel="Set up a game" isDismissable onDismiss={onClose}>
+    <FlowShell
+      ariaLabel="Set up a game"
+      isDismissable
+      isOpen={isOpen}
+      onDismiss={close}
+    >
       <div className="flex min-h-0 flex-col">
         <FlowStepper
           stepIndex={safeIndex}
           totalSteps={steps.length}
           canClose
-          onClose={onClose}
+          onClose={close}
         />
 
         <div className="relative h-[min(72vh,520px)] overflow-hidden sm:h-[460px]">
@@ -281,7 +298,7 @@ function StepHeader({
         {title}
       </h2>
       {subtitle ? (
-        <p className="mx-auto max-w-xs text-balance text-sm leading-relaxed text-muted">
+        <p className="mx-auto text-sm leading-relaxed text-muted">
           {subtitle}
         </p>
       ) : null}

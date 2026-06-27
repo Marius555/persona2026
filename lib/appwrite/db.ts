@@ -7,6 +7,8 @@ import {
   COLLECTIONS_TABLE_ID,
   CONTENT_TABLE_ID,
   PROFILES_TABLE_ID,
+  SUBSCRIPTION_TIERS_TABLE_ID,
+  SUBSCRIPTIONS_TABLE_ID,
 } from "./schema";
 
 /**
@@ -21,7 +23,13 @@ export const STORAGE_ID = process.env.STORAGE_ID!;
  * Custom (stable) table ids, sourced from `appwrite.schema.json` (the single
  * source of truth, applied by scripts/setup-appwrite.mjs).
  */
-export { PROFILES_TABLE_ID, CONTENT_TABLE_ID, COLLECTIONS_TABLE_ID };
+export {
+  PROFILES_TABLE_ID,
+  CONTENT_TABLE_ID,
+  COLLECTIONS_TABLE_ID,
+  SUBSCRIPTION_TIERS_TABLE_ID,
+  SUBSCRIPTIONS_TABLE_ID,
+};
 
 /**
  * Admin-scoped TablesDB. `createAuthClient()` attaches the API key when

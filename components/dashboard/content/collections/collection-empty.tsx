@@ -26,7 +26,7 @@ export function CollectionEmpty({
   const blurb =
     tier === "gamble"
       ? "Collections group the content fans can win in a game. Create your first one to start adding drops."
-      : "Collections group the content fans can unlock for tokens. Create your first one to start adding content.";
+      : "Collections group the content fans can unlock. Create your first one to start adding content.";
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 rounded-3xl border border-dashed border-border bg-surface/50 px-6 py-16 text-center">

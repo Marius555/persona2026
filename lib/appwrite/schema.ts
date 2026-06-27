@@ -22,3 +22,9 @@ export const CONTENT_TABLE_ID = tableId("content");
 
 /** Custom (stable) table id for content collections (per-tier groupings). */
 export const COLLECTIONS_TABLE_ID = tableId("collections");
+
+/** Custom (stable) table id for a creator's subscription tiers. */
+export const SUBSCRIPTION_TIERS_TABLE_ID = tableId("subscription_tiers");
+
+/** Custom (stable) table id for fan↔creator subscription records. */
+export const SUBSCRIPTIONS_TABLE_ID = tableId("subscriptions");

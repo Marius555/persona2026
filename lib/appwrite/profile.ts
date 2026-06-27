@@ -39,6 +39,19 @@ export async function getProfileByUserId(
   return (rows[0] as unknown as ProfileRow) ?? null;
 }
 
+/** The profile that owns `username` (public creator handle), or null. */
+export async function getProfileByUsername(
+  username: string,
+): Promise<ProfileRow | null> {
+  const db = createAdminTablesDB();
+  const { rows } = await db.listRows({
+    databaseId: DATABASE_ID,
+    tableId: PROFILES_TABLE_ID,
+    queries: [Query.equal("username", username), Query.limit(1)],
+  });
+  return (rows[0] as unknown as ProfileRow) ?? null;
+}
+
 /**
  * True when `username` is owned by a *different* user. Pass the current user's
  * id so they can keep their own handle when revisiting step 1.

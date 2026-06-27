@@ -42,7 +42,7 @@ export function EventDateStep({
       className="w-full text-left"
     >
       <Label>Date &amp; time</Label>
-      <DateField.Group fullWidth>
+      <DateField.Group fullWidth variant="secondary">
         <DateField.Input>
           {(segment) => <DateField.Segment segment={segment} />}
         </DateField.Input>

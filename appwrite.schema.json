@@ -84,6 +84,68 @@
       "indexes": [
         { "key": "idx_collections_user", "type": "key", "columns": ["userId"] }
       ]
+    },
+    {
+      "id": "subscription_tiers",
+      "name": "subscription_tiers",
+      "columns": [
+        { "key": "userId", "type": "varchar", "size": 64, "required": true },
+        { "key": "name", "type": "varchar", "size": 40, "required": true },
+        { "key": "tagline", "type": "varchar", "size": 120 },
+        { "key": "description", "type": "varchar", "size": 1000 },
+        { "key": "priceCents", "type": "integer", "min": 0, "max": 100000000, "required": true },
+        {
+          "key": "currency",
+          "type": "enum",
+          "elements": ["usd", "eur", "gbp"]
+        },
+        {
+          "key": "billingPeriod",
+          "type": "enum",
+          "elements": ["monthly", "quarterly", "yearly"]
+        },
+        { "key": "includedCollectionIds", "type": "varchar", "size": 64, "array": true },
+        { "key": "unlocksAllExclusive", "type": "boolean", "default": false },
+        { "key": "benefits", "type": "varchar", "size": 120, "array": true },
+        { "key": "coverFileId", "type": "varchar", "size": 64 },
+        { "key": "trialDays", "type": "integer", "min": 0, "max": 90 },
+        { "key": "introDiscountPercent", "type": "integer", "min": 0, "max": 100 },
+        { "key": "introLabel", "type": "varchar", "size": 60 },
+        { "key": "subscriberCap", "type": "integer", "min": 0, "max": 1000000 },
+        { "key": "visible", "type": "boolean", "default": true },
+        { "key": "sortOrder", "type": "integer", "min": 0, "max": 1000, "default": 0 }
+      ],
+      "indexes": [
+        { "key": "idx_subtiers_user", "type": "key", "columns": ["userId"] }
+      ]
+    },
+    {
+      "id": "subscriptions",
+      "name": "subscriptions",
+      "columns": [
+        { "key": "fanUserId", "type": "varchar", "size": 64, "required": true },
+        { "key": "creatorUserId", "type": "varchar", "size": 64, "required": true },
+        { "key": "tierId", "type": "varchar", "size": 64, "required": true },
+        {
+          "key": "status",
+          "type": "enum",
+          "elements": ["active", "trialing", "past_due", "canceled", "expired"],
+          "required": true
+        },
+        { "key": "startedAt", "type": "varchar", "size": 40 },
+        { "key": "currentPeriodEnd", "type": "varchar", "size": 40 },
+        { "key": "cancelAtPeriodEnd", "type": "boolean", "default": false },
+        { "key": "providerSubscriptionId", "type": "varchar", "size": 128 },
+        { "key": "providerCustomerId", "type": "varchar", "size": 128 }
+      ],
+      "indexes": [
+        { "key": "idx_subs_fan", "type": "key", "columns": ["fanUserId"] },
+        {
+          "key": "idx_subs_creator_status",
+          "type": "key",
+          "columns": ["creatorUserId", "status"]
+        }
+      ]
     }
   ]
 }

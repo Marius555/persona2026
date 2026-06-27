@@ -4,7 +4,6 @@ import {
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Calendar03Icon,
-  Coins01Icon,
   Comment01Icon,
   Diamond01Icon,
   DiscountTag01Icon,
@@ -48,6 +47,7 @@ import { TextAreaStep } from "./fields/textarea-step";
 import { TextFieldStep } from "./fields/text-field-step";
 import { FlowShell } from "./flow-shell";
 import { FlowStepper } from "./flow-stepper";
+import { useOverlayClose } from "./use-overlay-close";
 import { StepPublishing } from "./steps/step-publishing";
 import { StepType } from "./steps/step-type";
 
@@ -113,6 +113,9 @@ export function AddContentFlow({
 }: AddContentFlowProps) {
   const reduceMotion = useReducedMotion();
   const staging = !!onStage;
+  // Keep the overlay mounted long enough to play its slide-out before the parent
+  // unmounts us; close() is the single close path for every exit below.
+  const { isOpen, close } = useOverlayClose(onClose, reduceMotion ? 0 : 250);
 
   const [category, setCategory] = useState<ContentCategory | null>(
     initialCategory,
@@ -138,7 +141,9 @@ export function AddContentFlow({
   // Distribution — tier and collection are locked to where the + was pressed.
   const [tier] = useState<ContentTier>(defaultTier);
   const [rarity, setRarity] = useState<ContentRarity>("common");
-  const [tokenValue, setTokenValue] = useState(0);
+  // Tokens are platform-only currency — creators never set a price. Sent as the
+  // default so the backend column stays populated; the platform/agent prices it.
+  const tokenValue = 0;
   const [collectionId] = useState<string | null>(defaultCollectionId);
 
   // Publish
@@ -378,7 +383,7 @@ export function AddContentFlow({
     }
 
     // Distribution — appended for every category. Tier and collection are
-    // fixed to where the + was pressed, so only rarity/price remain.
+    // fixed to where the + was pressed, so only the gamble rarity remains.
     if (tier === "gamble") {
       steps.push({
         id: "dist-rarity",
@@ -386,27 +391,6 @@ export function AddContentFlow({
         title: "Pick a rarity",
         subtitle: "Rarer drops appear less often and feel more valuable.",
         render: () => <RarityStep rarity={rarity} onChange={setRarity} />,
-      });
-    }
-    // A drop is won, not bought — only the Exclusive tier sets a price.
-    if (tier !== "gamble") {
-      steps.push({
-        id: "dist-value",
-        icon: Coins01Icon,
-        title: "Set a price",
-        subtitle:
-          "Tokens are the in-app credits fans buy with real money and spend on your vault.",
-        render: () => (
-          <NumberFieldStep
-            label="Price (tokens)"
-            value={tokenValue}
-            onChange={setTokenValue}
-            minValue={0}
-            maxValue={1_000_000}
-            step={10}
-            description="The starting price — your agent fine-tunes it per fan."
-          />
-        ),
       });
     }
 
@@ -481,7 +465,7 @@ export function AddContentFlow({
     // The parent now owns the preview object URLs, so don't revoke them here.
     objectUrls.current = [];
     onStage?.(item);
-    onClose();
+    close();
   }
 
   function goNext() {
@@ -505,7 +489,7 @@ export function AddContentFlow({
     setDirection(-1);
     if (safeIndex === 0) {
       if (initialCategory) {
-        onClose();
+        close();
         return;
       }
       setCategory(null);
@@ -727,7 +711,7 @@ export function AddContentFlow({
       }
       return (
         <div className="px-6 pb-6 pt-3 sm:px-8">
-          <Button className="w-full cursor-pointer" onPress={onClose}>
+          <Button className="w-full cursor-pointer" onPress={close}>
             View vault
           </Button>
         </div>
@@ -754,14 +738,15 @@ export function AddContentFlow({
     <FlowShell
       ariaLabel="Add content"
       isDismissable={!isPublishing}
-      onDismiss={onClose}
+      isOpen={isOpen}
+      onDismiss={close}
     >
       <div className="flex min-h-0 flex-col">
         <FlowStepper
           stepIndex={safeIndex}
           totalSteps={onTerminal || showChooser ? 0 : steps.length}
           canClose={!isPublishing}
-          onClose={onClose}
+          onClose={close}
         />
 
         <div className="relative h-[380px] overflow-hidden sm:h-[400px]">

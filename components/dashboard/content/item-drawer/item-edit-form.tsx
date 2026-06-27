@@ -60,7 +60,9 @@ export function ItemEditForm({ item, onSaved, onClose }: ItemEditFormProps) {
   const [description, setDescription] = useState(item.description ?? "");
   const [tier, setTier] = useState<ContentTier>(item.tier ?? "exclusive");
   const [rarity, setRarity] = useState<ContentRarity>(item.rarity ?? "common");
-  const [tokenValue, setTokenValue] = useState(item.tokenValue ?? 0);
+  // Tokens are platform-only currency — creators no longer set a price. Preserve
+  // any existing value so editing an item never wipes it; the platform owns it.
+  const tokenValue = item.tokenValue ?? 0;
   const [discountPercent, setDiscountPercent] = useState(
     item.kind === "offer" ? item.discountPercent ?? 20 : 20,
   );
@@ -245,17 +247,7 @@ export function ItemEditForm({ item, onSaved, onClose }: ItemEditFormProps) {
           <span className="text-sm font-medium text-foreground">Rarity</span>
           <RarityStep rarity={rarity} onChange={setRarity} />
         </div>
-      ) : (
-        <NumberFieldStep
-          label="Price (tokens)"
-          value={tokenValue}
-          onChange={setTokenValue}
-          minValue={0}
-          maxValue={1_000_000}
-          step={10}
-          description="The starting price — your agent fine-tunes it per fan."
-        />
-      )}
+      ) : null}
 
       {error ? <p className="text-xs text-danger">{error}</p> : null}
 
